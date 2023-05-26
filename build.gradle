@@ -3,11 +3,19 @@ plugins {
 	id "maven-publish"
 }
 
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
+
 group = project.maven_group
 archivesBaseName = project.archivesBaseName
 version = "${project.mod_version}-mc${project.minecraft_version}"
 
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
+loom {
+	forge {
+		mixinConfigs = [
+		        "servux.mixins.json"
+		]
+	}
+}
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"

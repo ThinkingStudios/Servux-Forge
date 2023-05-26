@@ -1,34 +1,20 @@
 plugins {
-	id 'fabric-loom' version '0.12-SNAPSHOT'
+	id "dev.architectury.loom" version "1.1-SNAPSHOT"
+	id "maven-publish"
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+group = project.maven_group
+archivesBaseName = project.archivesBaseName
+version = "${project.mod_version}-mc${project.minecraft_version}"
 
-ext.configFile = file "build.properties"
-
-configFile.withReader {
-	def prop = new Properties()
-	prop.load(it)
-	project.ext.config = new ConfigSlurper().parse prop
-}
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
 
 dependencies {
-	minecraft "com.mojang:minecraft:${config.minecraft_version}"
-	mappings "net.fabricmc:yarn:${config.yarn_mappings_version}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${config.fabric_loader_version}"
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	forge "net.minecraftforge:forge:${project.forge_version}"
+
 	implementation "com.google.code.findbugs:jsr305:3.0.2"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	//modCompile "net.fabricmc.fabric-api:fabric-api:" + config.fabric_version
-}
-
-group = config.group + "." + config.mod_id
-archivesBaseName = config.mod_file_name + '-' + config.minecraft_version_out
-version = config.mod_version
-
-if (version.endsWith('-dev')) {
-	version += "." + new Date().format('yyyyMMdd.HHmmss')
 }
 
 processResources {
@@ -36,23 +22,33 @@ processResources {
 	exclude '**/*.xcf'
 	exclude '**/xcf'
 
-	// this will ensure that this task is redone when the versions change.
-	//inputs.property "minecraft_version", project.config.minecraft_version
+	inputs.property "mod_version", project.mod_version
 
-	inputs.property "mod_version", config.mod_version
-
-	filesMatching("fabric.mod.json") {
-		expand "mod_version": config.mod_version
+	filesMatching("META-INF/mods.toml") {
+		expand "mod_version": project.mod_version
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
-	// ensure that the encoding is set to UTF-8, no matter what the system default is
-	// this fixes some edge cases with special characters not displaying correctly
-	// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-	// If Javadoc is generated, this must be specified in that task too.
 	it.options.encoding = "UTF-8"
 
 	// Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
 	it.options.release = 17
+}
+
+// configure the maven publication
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		// Add repositories to publish to here.
+		// Notice: This block does NOT have the same function as the block in the top level.
+		// The repositories here will be used for publishing your artifact, not for
+		// retrieving dependencies.
+	}
 }

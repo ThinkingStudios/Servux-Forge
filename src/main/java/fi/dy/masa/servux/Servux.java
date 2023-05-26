@@ -1,29 +1,26 @@
 package fi.dy.masa.servux;
 
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.loading.FMLLoader;
+import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
-import net.fabricmc.api.ModInitializer;
 
-public class Servux implements ModInitializer
-{
-    public static final Logger logger = LogManager.getLogger(Reference.MOD_ID);
+@Mod(Reference.MOD_ID)
+public class Servux {
+    public static final Logger logger = LogManager.getLogger(Reference.MOD_NAME);
 
-    @Override
-    public void onInitialize()
-    {
+    public Servux() {
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.readFromConfig();
     }
 
-    public static String getModVersionString(String modId)
-    {
-        for (net.fabricmc.loader.api.ModContainer container : net.fabricmc.loader.api.FabricLoader.getInstance().getAllMods())
-        {
-            if (container.getMetadata().getId().equals(modId))
-            {
-                return container.getMetadata().getVersion().getFriendlyString();
+    public static String getModVersionString(String modId) {
+        for (ModInfo modInfo : FMLLoader.getLoadingModList().getMods()) {
+            if (modInfo.getModId().equals(modId)) {
+                return modInfo.getVersion().getQualifier();
             }
         }
 

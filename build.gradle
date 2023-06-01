@@ -30,18 +30,35 @@ processResources {
 	exclude '**/*.xcf'
 	exclude '**/xcf'
 
-	inputs.property "mod_version", project.mod_version
+	inputs.property "version", project.version
 
 	filesMatching("META-INF/mods.toml") {
-		expand "mod_version": project.mod_version
+		expand "version": project.version
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
 
-	// Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
 	it.options.release = 17
+}
+
+java {
+	withSourcesJar()
+}
+
+jar {
+	manifest {
+		attributes([
+				"Specification-Title"     : project.mod_id,
+				"Specification-Vendor"    : project.mod_author,
+				"Specification-Version"   : "1",
+				"Implementation-Title"    : project.name,
+				"Implementation-Version"  : version,
+				"Implementation-Vendor"   : project.mod_author,
+				"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+		])
+	}
 }
 
 // configure the maven publication

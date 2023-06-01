@@ -1,0 +1,31 @@
+modLoader = "javafml"
+loaderVersion = "[35,)"
+license = "LGPLv3"
+
+[[mods]]
+modId = "servux"
+version = "${version}"
+displayName = "Servux-Forge"
+displayURL="https://github.com/ThinkingStudios/Servux-Forge" #optional
+logoFile="icon.png" #optional
+credits="masa" #optional
+authors="TexTrue, ThinkingStudio" #optional
+description = '''
+Servux unofficial forge port.
+
+Server-side support and integration for masa's client mods.
+'''
+
+[[dependencies.servux]]
+modId = "forge"
+mandatory = true
+versionRange = "[35,)"
+ordering = "NONE"
+side = "SERVER"
+
+[[dependencies.servux]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.16.4,)"
+ordering = "NONE"
+side = "SERVER"

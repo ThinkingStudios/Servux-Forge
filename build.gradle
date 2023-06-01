@@ -7,7 +7,7 @@ sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
 
 group = project.maven_group
 archivesBaseName = project.archives_base_name
-version = "${project.mod_version}+${project.minecraft_version}"
+version = "${project.mod_version}-mc${project.minecraft_version}"
 
 loom {
 	forge {

@@ -33,7 +33,7 @@ public class ServerPacketChannelHandler
             List<Identifier> toRegister = new ArrayList<>();
             Identifier channel = handler.getChannel();
 
-            if (this.handlers.containsKey(channel) == false)
+            if (!this.handlers.containsKey(channel))
             {
                 this.handlers.put(channel, handler);
                 toRegister.add(channel);
@@ -122,7 +122,7 @@ public class ServerPacketChannelHandler
 
     private void schedule(Runnable task, ServerPlayNetworkHandler netHandler)
     {
-        netHandler.player.server.execute(task);
+        netHandler.getPlayer().getServer().execute(task);
     }
 
     private static List<Identifier> getChannels(PacketByteBuf buf)

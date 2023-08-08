@@ -1,5 +1,7 @@
 package fi.dy.masa.servux;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
@@ -10,9 +12,13 @@ import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 
 @Mod(Reference.MOD_ID)
 public class Servux {
-    public static final Logger logger = LogManager.getLogger(Reference.MOD_ID);
+    public static final Logger logger = LogManager.getLogger(Reference.MOD_NAME);
 
     public Servux() {
+        DistExecutor.safeRunWhenOn(Dist.DEDICATED_SERVER, () -> this::onInitialize);
+    }
+
+    public void onInitialize() {
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.readFromConfig();
     }

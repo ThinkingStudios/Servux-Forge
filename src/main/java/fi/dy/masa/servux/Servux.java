@@ -1,10 +1,8 @@
 package fi.dy.masa.servux;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.fml.loading.moddiscovery.ModInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
@@ -15,7 +13,9 @@ public class Servux {
     public static final Logger logger = LogManager.getLogger(Reference.MOD_NAME);
 
     public Servux() {
-        DistExecutor.safeRunWhenOn(Dist.DEDICATED_SERVER, () -> this::onInitialize);
+        if (FMLLoader.getDist().isDedicatedServer()) {
+            this.onInitialize();
+        }
     }
 
     public void onInitialize() {

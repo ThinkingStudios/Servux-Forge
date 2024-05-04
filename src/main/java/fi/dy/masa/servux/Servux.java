@@ -13,7 +13,7 @@ public class Servux {
     public static final Logger logger = LogManager.getLogger(Reference.MOD_NAME);
 
     public Servux() {
-        if (FMLLoader.getDist().isClient()) {
+        if (FMLLoader.getDist().isDedicatedServer()) {
             DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
             DataProviderManager.INSTANCE.readFromConfig();
         }

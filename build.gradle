@@ -1,12 +1,11 @@
 plugins {
-	id "dev.architectury.loom" version "1.1-SNAPSHOT"
+	id "dev.architectury.loom" version "1.5-SNAPSHOT"
 	id "maven-publish"
+	id "com.hypherionmc.modutils.modpublisher" version "2.+"
 }
 
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
-
 group = project.maven_group
-archivesBaseName = project.archives_base_name
+base.archivesName = project.archives_base_name
 version = "${project.mod_version}-mc${project.minecraft_version}"
 
 loom {
@@ -44,6 +43,9 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+
 	withSourcesJar()
 }
 
@@ -76,4 +78,23 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+
+publisher {
+	apiKeys {
+		modrinth System.getenv("MODRINTH_TOKEN")
+		curseforge System.getenv("CURSEFORGE_TOKEN")
+	}
+
+	setCurseID("${project.curseforge_id}")
+	setModrinthID("${project.modrinth_id}")
+	setVersionType("alpha")
+	//setChangelog(file("CHANGELOG.md").getText("UTF-8"))
+	setVersion("${project.version}")
+	setDisplayName("${project.version}")
+	setGameVersions("1.20", "1.20.1")
+	setLoaders("forge")
+	setCurseEnvironment("client")
+	setArtifact(remapJar)
+	addAdditionalFile(sourcesJar)
 }

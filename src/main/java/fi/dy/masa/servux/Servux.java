@@ -15,12 +15,10 @@ public class Servux {
     public static final Logger logger = LogManager.getLogger(Reference.MOD_NAME);
 
     public Servux() {
-        DistExecutor.safeRunWhenOn(Dist.DEDICATED_SERVER, () -> this::onInitialize);
-    }
-
-    public void onInitialize() {
-        DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
-        DataProviderManager.INSTANCE.readFromConfig();
+        if (FMLLoader.getDist().isDedicatedServer()) {
+            DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
+            DataProviderManager.INSTANCE.readFromConfig();
+        }
     }
 
     public static String getModVersionString(String modId) {

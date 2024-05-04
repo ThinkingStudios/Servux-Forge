@@ -5,7 +5,7 @@ license = "LGPLv3"
 [[mods]]
 modId = "servux"
 version = "${version}"
-displayName = "Servux-Forge"
+displayName = "ServuxForged"
 displayURL="https://github.com/ThinkingStudios/Servux-Forge" #optional
 logoFile="icon.png" #optional
 credits="masa" #optional

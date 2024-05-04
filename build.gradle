@@ -1,12 +1,11 @@
 plugins {
-    id "dev.architectury.loom" version "1.1-SNAPSHOT"
+    id "dev.architectury.loom" version "1.5-SNAPSHOT"
     id "maven-publish"
+    id "com.hypherionmc.modutils.modpublisher" version "2.+"
 }
 
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
-
 group = project.maven_group
-archivesBaseName = project.archives_base_name
+base.archivesName = project.archives_base_name
 version = "${project.mod_version}-mc${project.minecraft_version}"
 
 loom {
@@ -45,6 +44,9 @@ processResources {
 }
 
 java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
     withSourcesJar()
 }
 

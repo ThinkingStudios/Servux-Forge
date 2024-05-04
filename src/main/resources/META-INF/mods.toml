@@ -18,13 +18,13 @@ Server-side support and integration for masa's client mods.
 [[dependencies.servux]]
 modId = "neoforge"
 mandatory = true
-versionRange = "[20.3,)"
+versionRange = "[20,)"
 ordering = "NONE"
 side = "SERVER"
 
 [[dependencies.servux]]
 modId = "minecraft"
 mandatory = true
-versionRange = "[1.20.3,)"
+versionRange = "[1.20.2,)"
 ordering = "NONE"
 side = "SERVER"

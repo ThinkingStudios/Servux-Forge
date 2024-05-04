@@ -4,8 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.tuple.Pair;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
@@ -109,7 +110,7 @@ public class PacketSplitter
      * @param packetType
      * @param data
      */
-    public static void sendPacketTypeAndCompound(ServerPlayerEntity player, Identifier channel, int packetType, CompoundTag data)
+    public static void sendPacketTypeAndCompound(ServerPlayerEntity player, Identifier channel, int packetType, NbtCompound data)
     {
         sendPacketTypeAndCompound(player.networkHandler, channel, packetType, data);
     }
@@ -121,11 +122,11 @@ public class PacketSplitter
      * @param packetType
      * @param data
      */
-    public static void sendPacketTypeAndCompound(ServerPlayNetworkHandler networkHandler, Identifier channel, int packetType, CompoundTag data)
+    public static void sendPacketTypeAndCompound(ServerPlayNetworkHandler networkHandler, Identifier channel, int packetType, NbtCompound data)
     {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
         buf.writeVarInt(packetType);
-        buf.writeCompoundTag(data);
+        buf.writeNbt(data);
 
         send(networkHandler, channel, buf);
     }

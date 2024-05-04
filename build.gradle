@@ -89,7 +89,7 @@ publisher {
 	setCurseID("${project.curseforge_id}")
 	setModrinthID("${project.modrinth_id}")
 	setVersionType("alpha")
-	//setChangelog(file("CHANGELOG.md").getText("UTF-8"))
+	setChangelog(file("CHANGELOG.md").getText("UTF-8"))
 	setVersion("${project.version}")
 	setDisplayName("${project.version}")
 	setGameVersions("1.19", "1.19.1", "1.19.2", "1.19.3", "1.19.4")

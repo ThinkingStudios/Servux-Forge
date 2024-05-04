@@ -1,6 +1,6 @@
-# Servux-Forge
+# ServuxForged
 
-Servux unofficial forge port.
+Servux unofficial (Neo)Forge port.
 
 Servux-Forge is a server-side mod that provides extra support/features for some client-side mods when playing on a server.
 

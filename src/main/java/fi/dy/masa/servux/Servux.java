@@ -14,13 +14,9 @@ public class Servux {
 
     public Servux() {
         if (FMLLoader.getDist().isDedicatedServer()) {
-            this.onInitialize();
+            DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
+            DataProviderManager.INSTANCE.readFromConfig();
         }
-    }
-
-    public void onInitialize() {
-        DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
-        DataProviderManager.INSTANCE.readFromConfig();
     }
 
     public static String getModVersionString(String modId) {

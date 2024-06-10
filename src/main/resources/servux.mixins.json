@@ -5,6 +5,8 @@
 	"minVersion": "0.8",
 	"mixins": [
 		"MixinMinecraftServer",
+		"MixinPlayerManager",
+		"MixinServerWorld",
 		"MixinThreadedAnvilChunkStorage"
 	],
 	"injectors": {

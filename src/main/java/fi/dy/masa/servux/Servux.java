@@ -1,31 +1,26 @@
 package fi.dy.masa.servux;
 
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.loading.FMLLoader;
-import net.neoforged.fml.loading.moddiscovery.ModInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
+import fi.dy.masa.servux.event.PlayerHandler;
+import fi.dy.masa.servux.event.PlayerListener;
+import fi.dy.masa.servux.event.ServerHandler;
+import fi.dy.masa.servux.event.ServerListener;
 
-@Mod(Reference.MOD_ID)
-public class Servux {
-    public static final Logger logger = LogManager.getLogger(Reference.MOD_NAME);
+public class Servux
+{
+    public static final Logger logger = LogManager.getLogger(Reference.MOD_ID);
 
-    public Servux() {
-        if (FMLLoader.getDist().isDedicatedServer()) {
-            DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
-            DataProviderManager.INSTANCE.readFromConfig();
-        }
-    }
+    public static void onInitialize()
+    {
+        DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
 
-    public static String getModVersionString(String modId) {
-        for (ModInfo modInfo : FMLLoader.getLoadingModList().getMods()) {
-            if (modInfo.getModId().equals(modId)) {
-                return modInfo.getVersion().getQualifier();
-            }
-        }
+        ServerListener serverListener = new ServerListener();
+        ServerHandler.getInstance().registerServerHandler(serverListener);
 
-        return "?";
+        PlayerListener playerListener = new PlayerListener();
+        PlayerHandler.getInstance().registerPlayerHandler(playerListener);
     }
 }

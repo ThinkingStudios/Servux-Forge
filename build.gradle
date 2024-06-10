@@ -1,10 +1,8 @@
 plugins {
-	id "dev.architectury.loom" version "1.5-SNAPSHOT"
+	id "dev.architectury.loom" version "1.6-SNAPSHOT"
 	id "maven-publish"
 	id "com.hypherionmc.modutils.modpublisher" version "2.+"
 }
-
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
 
 group = project.maven_group
 archivesBaseName = project.archives_base_name
@@ -13,14 +11,18 @@ version = "${project.mod_version}-mc${project.minecraft_version}"
 repositories {
 	maven { url "https://www.jitpack.io" }
 	maven { url "https://maven.neoforged.net/releases/" }
+	maven { url "https://api.modrinth.com/maven" }
 }
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	mappings loom.layered {
+		mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+		mappings "dev.architectury:yarn-mappings-patch-${loom.platform.get().id()}:${project.yarn_patch}"
+	}
 	neoForge "net.neoforged:neoforge:${project.neoforge_version}"
 
-	modApi(include("com.github.ThinkingStudios:ForgedNetworkingAPI:0.1.0-mc1.20.4"))
+	modImplementation(include("maven.modrinth:forged-networking-api:0.1.1+mc1.20.6"))
 
 	implementation "com.google.code.findbugs:jsr305:3.0.2"
 }
@@ -32,7 +34,7 @@ processResources {
 
 	inputs.property "version", project.version
 
-	filesMatching("META-INF/mods.toml") {
+	filesMatching("META-INF/neoforge.mods.toml") {
 		expand "version": project.version
 	}
 }
@@ -40,10 +42,13 @@ processResources {
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
 
-	it.options.release = 17
+	it.options.release = 21
 }
 
 java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+
 	withSourcesJar()
 }
 
@@ -90,7 +95,7 @@ publisher {
 	setChangelog(file("CHANGELOG.md").getText("UTF-8"))
 	setVersion("${project.version}")
 	setDisplayName("${project.version}")
-	setGameVersions("1.20.3", "1.20.4")
+	setGameVersions("1.20.5", "1.20.6")
 	setLoaders("neoforge")
 	setCurseEnvironment("client")
 	setArtifact(remapJar)

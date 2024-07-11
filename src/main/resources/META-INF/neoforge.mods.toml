@@ -5,16 +5,19 @@ license = "LGPLv3"
 [[mods]]
 modId = "servux"
 version = "${version}"
-displayName = "ForgedServux"
+displayName = "ServuxForged"
 displayURL="https://github.com/ThinkingStudios/Servux-Forge" #optional
 logoFile="icon.png" #optional
 credits="masa" #optional
 authors="TexTrue, ThinkingStudio" #optional
 description = '''
-Servux unofficial forge port.
+Servux unofficial (Neo)Forge port.
 
 Server-side support and integration for masa's client mods.
 '''
+
+[[mixins]]
+config = "servux.mixins.json"
 
 [[dependencies.servux]]
 modId = "neoforge"
@@ -26,12 +29,12 @@ side = "SERVER"
 [[dependencies.servux]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.20.2,)"
+versionRange = "[1.20.6,)"
 ordering = "NONE"
 side = "SERVER"
 
 [[dependencies.servux]]
-modId = "forged_networking"
+modId = "neonetwork"
 type = "required"
 versionRange = "*"
 ordering = "NONE"

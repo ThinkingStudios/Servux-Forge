@@ -1,5 +1,7 @@
 # ServuxForged
 
+**This mod requires [BadPackets](https://modrinth.com/mod/badpackets) in 1.20.4 and above.**
+
 Servux unofficial (Neo)Forge port.
 
 ServuxForged is a server-side mod that provides extra support/features for some client-side mods when playing on a server.

@@ -1,12 +1,12 @@
 plugins {
-	id "dev.architectury.loom" version "1.6-SNAPSHOT"
+	alias(libs.plugins.architectury.loom)
+	alias(libs.plugins.modpublisher)
 	id "maven-publish"
-	id "com.hypherionmc.modutils.modpublisher" version "2.+"
 }
 
-group = project.maven_group
-base.archivesName = project.archives_base_name
-version = "${project.mod_version}-mc${project.minecraft_version}"
+base.archivesName = libs.versions.archives.name.get()
+version = "${libs.versions.version.get()}-mc${libs.versions.minecraft.version.get()}"
+group = libs.versions.maven.group.get()
 
 repositories {
 	maven { url "https://maven.neoforged.net/releases/" }
@@ -27,28 +27,22 @@ repositories {
 			includeGroup "lol.bai"
 		}
 	}
-
 }
 
 dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	minecraft libs.minecraft
 	mappings loom.layered {
-		mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-		mappings "dev.architectury:yarn-mappings-patch-${loom.platform.get().id()}:${project.yarn_patch}"
+		mappings variantOf(libs.yarn.mappings) { classifier("v2") }
+		mappings libs.yarn.patch
 	}
-	neoForge "net.neoforged:neoforge:${project.neoforge_version}"
-
-	modImplementation("lol.bai:badpackets:neo-${project.badpackets_version}")
+	neoForge libs.neoforge
+	modImplementation libs.badpackets
 	modImplementation(include("org.thinkingstudio:neopermissions:0.1.0+1.20.6"))
 
-	implementation "com.google.code.findbugs:jsr305:3.0.2"
+	implementation libs.jsr305
 }
 
 processResources {
-	// Exclude the GIMP image files
-	exclude '**/*.xcf'
-	exclude '**/xcf'
-
 	inputs.property "version", project.version
 
 	filesMatching("META-INF/neoforge.mods.toml") {
@@ -56,10 +50,9 @@ processResources {
 	}
 }
 
-tasks.withType(JavaCompile).configureEach {
-	it.options.encoding = "UTF-8"
-
-	it.options.release = 21
+tasks.withType(JavaCompile) {
+	options.encoding = "UTF-8"
+	options.release = 21
 }
 
 java {
@@ -67,20 +60,6 @@ java {
 	targetCompatibility = JavaVersion.VERSION_21
 
 	withSourcesJar()
-}
-
-jar {
-	manifest {
-		attributes([
-				"Specification-Title"     : project.mod_id,
-				"Specification-Vendor"    : project.mod_author,
-				"Specification-Version"   : "1",
-				"Implementation-Title"    : project.name,
-				"Implementation-Version"  : version,
-				"Implementation-Vendor"   : project.mod_author,
-				"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-		])
-	}
 }
 
 // configure the maven publication
@@ -106,15 +85,17 @@ publisher {
 		curseforge System.getenv("CURSEFORGE_TOKEN")
 	}
 
-	setCurseID("${project.curseforge_id}")
-	setModrinthID("${project.modrinth_id}")
+	setCurseID("${libs.versions.id.curseforge.get()}")
+	setModrinthID("${libs.versions.id.modrinth.get()}")
 	setVersionType("alpha")
 	setChangelog(file("CHANGELOG.md").getText("UTF-8"))
 	setVersion("${project.version}")
 	setDisplayName("${project.version}")
-	setGameVersions("1.21")
-	setLoaders("neoforge")
-	setCurseEnvironment("client")
+	setGameVersions(libs.versions.minecraft.range.get())
+	setLoaders(loom.platform.get().id())
+	setCurseEnvironment("server")
 	setArtifact(remapJar)
 	addAdditionalFile(sourcesJar)
+	modrinthDepends.required("badpackets")
+	curseDepends.required("badpackets")
 }

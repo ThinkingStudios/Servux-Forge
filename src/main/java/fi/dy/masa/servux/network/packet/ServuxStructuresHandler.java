@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
-import org.thinkingstudio.fabric.api.networking.v1.ServerPlayNetworking;
+import lol.bai.badpackets.api.play.ServerPlayContext;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -22,9 +22,8 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 {
     private static final ServuxStructuresHandler<ServuxStructuresPacket.Payload> INSTANCE = new ServuxStructuresHandler<>() {
         @Override
-        public void receive(ServuxStructuresPacket.Payload payload, ServerPlayNetworking.Context context)
-        {
-            ServuxStructuresHandler.INSTANCE.receivePlayPayload(payload, context);
+        public void receive(ServerPlayContext context, ServuxStructuresPacket.Payload payload) {
+            ServuxStructuresHandler.INSTANCE.receivePlayPayload(context, payload);
         }
     };
     public static ServuxStructuresHandler<ServuxStructuresPacket.Payload> getInstance() { return INSTANCE; }
@@ -60,7 +59,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
     public void decodeStructuresPacket(Identifier channel, ServerPlayerEntity player, ServuxStructuresPacket packet)
     {
-        if (channel.equals(CHANNEL_ID) == false)
+        if (!channel.equals(CHANNEL_ID))
         {
             return;
         }
@@ -104,7 +103,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     }
 
     @Override
-    public void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx)
+    public void receivePlayPayload(ServerPlayContext ctx, T payload)
     {
         if (payload.getId().id().equals(CHANNEL_ID))
         {
@@ -129,18 +128,18 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             buffer.writeNbt(packet.getCompound());
             PacketSplitter.send(this, buffer, player, player.networkHandler);
         }
-        else if (ServuxStructuresHandler.INSTANCE.sendPlayPayload(player, new ServuxStructuresPacket.Payload(packet)) == false)
+        else if (!ServuxStructuresHandler.INSTANCE.sendPlayPayload(player, new ServuxStructuresPacket.Payload(packet)))
         {
             // Packet failure tracking
             UUID id = player.getUuid();
 
-            if (this.failures.containsKey(id) == false)
+            if (!this.failures.containsKey(id))
             {
                 this.failures.put(id, 1);
             }
             else if (this.failures.get(id) > MAX_FAILURES)
             {
-                Servux.logger.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                //Servux.logger.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
                 StructureDataProvider.INSTANCE.unregister(player);
             }
             else

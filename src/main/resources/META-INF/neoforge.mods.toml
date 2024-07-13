@@ -29,13 +29,13 @@ side = "SERVER"
 [[dependencies.servux]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.20.6,)"
+versionRange = "[1.21,)"
 ordering = "NONE"
 side = "SERVER"
 
 [[dependencies.servux]]
-modId = "neonetwork"
+modId = "badpackets"
 type = "required"
-versionRange = "*"
+versionRange = "[1.21,)"
 ordering = "NONE"
 side = "SERVER"

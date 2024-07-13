@@ -14,8 +14,8 @@ maven-group="org.thinkingstudio"
 archives-name="ServuxForged"
 
 # Publish properties
-id-modrinth="SKI34J7B"
-id-curseforge="910766"
+id-modrinth="H9LzoDgA"
+id-curseforge="1013154"
 
 # Mod dependencies
 badpackets="neo-0.8.1"

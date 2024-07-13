@@ -3,8 +3,12 @@ package fi.dy.masa.servux.network;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
-import org.thinkingstudio.fabric.api.networking.v1.PayloadTypeRegistry;
-import org.thinkingstudio.fabric.api.networking.v1.ServerPlayNetworking;
+//import org.thinkingstudio.fabric.api.networking.v1.PayloadTypeRegistry;
+//import org.thinkingstudio.fabric.api.networking.v1.ServerPlayNetworking;
+import lol.bai.badpackets.api.PacketReceiver;
+import lol.bai.badpackets.api.play.PlayPackets;
+import lol.bai.badpackets.api.play.ServerPlayContext;
+import lol.bai.badpackets.impl.registry.ChannelRegistry;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
@@ -22,7 +26,7 @@ import fi.dy.masa.servux.Servux;
  * Interface for ServerPlayHandler
  * @param <T> (Payload Param)
  */
-public interface IPluginServerPlayHandler<T extends CustomPayload> extends ServerPlayNetworking.PlayPayloadHandler<T>
+public interface IPluginServerPlayHandler<T extends CustomPayload> extends PacketReceiver<ServerPlayContext, T>
 {
     int FROM_SERVER = 1;
     int TO_SERVER = 2;
@@ -73,12 +77,12 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
             {
                 switch (direction)
                 {
-                    case TO_SERVER, FROM_CLIENT -> PayloadTypeRegistry.playC2S().register(id, codec);
-                    case FROM_SERVER, TO_CLIENT -> PayloadTypeRegistry.playS2C().register(id, codec);
+                    case TO_SERVER, FROM_CLIENT -> PlayPackets.registerServerChannel(id, codec);
+                    case FROM_SERVER, TO_CLIENT -> PlayPackets.registerClientChannel(id, codec);
                     default ->
                     {
-                        PayloadTypeRegistry.playC2S().register(id, codec);
-                        PayloadTypeRegistry.playS2C().register(id, codec);
+                        PlayPackets.registerServerChannel(id, codec);
+                        PlayPackets.registerClientChannel(id, codec);
                     }
                 }
             }
@@ -104,13 +108,14 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param receiver (Your Packet Receiver // if null, uses this::receivePlayPayload)
      * @return (True / False)
      */
-    default boolean registerPlayReceiver(@Nonnull CustomPayload.Id<T> id, @Nullable ServerPlayNetworking.PlayPayloadHandler<T> receiver)
+    default boolean registerPlayReceiver(@Nonnull CustomPayload.Id<T> id, @Nullable PacketReceiver<ServerPlayContext, T> receiver)
     {
         if (this.isPlayRegistered(this.getPayloadChannel()))
         {
             try
             {
-                return ServerPlayNetworking.registerGlobalReceiver(id, Objects.requireNonNullElse(receiver, this::receivePlayPayload));
+                PlayPackets.registerServerReceiver(id, Objects.requireNonNullElse(receiver, this::receivePlayPayload));
+                return true;
             }
             catch (IllegalArgumentException e)
             {
@@ -130,7 +135,8 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      */
     default void unregisterPlayReceiver()
     {
-        ServerPlayNetworking.unregisterGlobalReceiver(this.getPayloadChannel());
+        ChannelRegistry.PLAY_S2C.has(this.getPayloadChannel());
+        //ServerPlayNetworking.unregisterGlobalReceiver(this.getPayloadChannel());
     }
 
     /**
@@ -139,7 +145,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param payload (Payload to decode)
      * @param ctx (Fabric Context)
      */
-    void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx);
+    void receivePlayPayload(ServerPlayContext ctx, T payload);
 
     /**
      * Receive Payload via the legacy "onCustomPayload" from a Network Handler Mixin interface.
@@ -194,9 +200,9 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     {
         if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
         {
-            if (ServerPlayNetworking.canSend(player, payload.getId()))
+            if (player.networkHandler.hasChannel(payload.getId()))
             {
-                ServerPlayNetworking.send(player, payload);
+                player.networkHandler.send(payload);
                 return true;
             }
         }

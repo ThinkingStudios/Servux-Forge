@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
-import org.thinkingstudio.fabric.api.networking.v1.ServerPlayNetworking;
+//import org.thinkingstudio.fabric.api.networking.v1.ServerPlayNetworking;
+import lol.bai.badpackets.api.play.ServerPlayContext;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -22,9 +23,9 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 {
     private static final ServuxStructuresHandler<ServuxStructuresPacket.Payload> INSTANCE = new ServuxStructuresHandler<>() {
         @Override
-        public void receive(ServuxStructuresPacket.Payload payload, ServerPlayNetworking.Context context)
+        public void receive(ServerPlayContext context, ServuxStructuresPacket.Payload payload)
         {
-            ServuxStructuresHandler.INSTANCE.receivePlayPayload(payload, context);
+            ServuxStructuresHandler.INSTANCE.receivePlayPayload(context, payload);
         }
     };
     public static ServuxStructuresHandler<ServuxStructuresPacket.Payload> getInstance() { return INSTANCE; }
@@ -104,7 +105,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     }
 
     @Override
-    public void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx)
+    public void receivePlayPayload(ServerPlayContext ctx, T payload)
     {
         if (payload.getId().id().equals(CHANNEL_ID))
         {

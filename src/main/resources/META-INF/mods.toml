@@ -15,6 +15,9 @@ Servux unofficial forge port.
 Server-side support and integration for masa's client mods.
 '''
 
+[[mixins]]
+config = "servux.mixins.json"
+
 [[dependencies.servux]]
 modId = "neoforge"
 mandatory = true
@@ -26,5 +29,12 @@ side = "SERVER"
 modId = "minecraft"
 mandatory = true
 versionRange = "[1.20.2,)"
+ordering = "NONE"
+side = "SERVER"
+
+[[dependencies.servux]]
+modId = "badpackets"
+mandatory = true
+versionRange = "*"
 ordering = "NONE"
 side = "SERVER"

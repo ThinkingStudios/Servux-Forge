@@ -36,6 +36,6 @@ side = "SERVER"
 [[dependencies.servux]]
 modId = "badpackets"
 type = "required"
-versionRange = "[1.21,)"
+versionRange = "*"
 ordering = "NONE"
 side = "SERVER"

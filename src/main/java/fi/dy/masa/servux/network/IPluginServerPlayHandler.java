@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 
 import lol.bai.badpackets.api.PacketReceiver;
+import lol.bai.badpackets.api.PacketSender;
 import lol.bai.badpackets.api.play.PlayPackets;
 import lol.bai.badpackets.api.play.ServerPlayContext;
 import lol.bai.badpackets.impl.registry.ChannelRegistry;
@@ -62,8 +63,8 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
     void reset(Identifier channel);
 
     /**
-     * Register your Payload with Fabric API.
-     * See the fabric-networking-api-v1 Java Docs under PayloadTypeRegistry -> register()
+     * Register your Payload with BadPackets.
+     * See the BadPackets Java Docs under PlayPackets -> registerServerChannel() and PlayPackets -> registerClientChannel()
      * for more information on how to do this.
      * -
      * @param direction (Payload Direction)
@@ -102,7 +103,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
     /**
      * Register your Packet Receiver function.
      * You can use the HANDLER itself (Singleton method), or any other class that you choose.
-     * See the fabric-network-api-v1 Java Docs under ServerPlayNetworking.registerGlobalReceiver()
+     * See the BadPackets Java Docs under PlayPackets.registerServerReceiver()
      * for more information on how to do this.
      * -
      * @param id (Your Payload Id<T>)
@@ -131,20 +132,18 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
     /**
      * Unregisters your Packet Receiver function.
      * You can use the HANDLER itself (Singleton method), or any other class that you choose.
-     * See the fabric-network-api-v1 Java Docs under ServerPlayNetworking.unregisterGlobalReceiver()
-     * for more information on how to do this.
      */
     default void unregisterPlayReceiver()
     {
-        ChannelRegistry.PLAY_S2C.has(this.getPayloadChannel());
+        ChannelRegistry.PLAY_S2C.getChannels().remove(this.getPayloadChannel());
         //ServerPlayNetworking.unregisterGlobalReceiver(this.getPayloadChannel());
     }
 
     /**
      * Receive Payload by pointing static receive() method to this to convert Payload to its data decode() function.
      * -
+     * @param ctx (BadPackets Context)
      * @param payload (Payload to decode)
-     * @param ctx (Fabric Context)
      */
     void receivePlayPayload(ServerPlayContext ctx, T payload);
 
@@ -193,7 +192,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
     void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buf, ServerPlayNetworkHandler networkHandler);
 
     /**
-     * Sends the Payload to the player using the Fabric-API interface.
+     * Sends the Payload to the player using the BadPackets interface.
      * -
      * @param player (Player to send the data to)
      * @param payload (The Payload to send)
@@ -203,15 +202,17 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
     {
         if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
         {
-            if (player.networkHandler.hasChannel(payload.getId()))
+            var s2c = PacketSender.s2c(player);
+
+            if (s2c.canSend(payload.getId()))
             {
-                player.networkHandler.send(payload);
+                s2c.send(payload);
                 return true;
             }
         }
         else
         {
-            Servux.logger.warn("sendPlayPayload: [Fabric-API] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
+            Servux.logger.warn("sendPlayPayload: [BadPackets] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
         }
 
         return false;

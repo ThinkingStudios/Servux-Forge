@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 import io.netty.buffer.Unpooled;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+//import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import lol.bai.badpackets.api.PacketSender;
 import org.apache.commons.lang3.tuple.Pair;
 
 import net.minecraft.nbt.NbtCompound;
@@ -49,7 +50,8 @@ public class PacketSplitter
 
             buf.writeBytes(packet, thisLen);
 
-            ServerPlayNetworking.send(player, channel, buf);
+            PacketSender.s2c(player).send(channel, buf);
+            //ServerPlayNetworking.send(player, channel, buf);
         }
 
         packet.release();

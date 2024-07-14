@@ -1,6 +1,7 @@
 package fi.dy.masa.servux.network;
 
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.PlayChannelHandler;
+import lol.bai.badpackets.api.play.ServerPlayPacketReceiver;
+//import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.PlayChannelHandler;
 
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
@@ -11,7 +12,7 @@ public interface IPluginChannelHandler
 {
     Identifier getChannel();
 
-    default PlayChannelHandler getServerPacketHandler()
+    default ServerPlayPacketReceiver<PacketByteBuf> getServerPacketHandler()
     {
         if (this.usePacketSplitter())
         {

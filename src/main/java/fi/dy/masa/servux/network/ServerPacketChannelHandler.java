@@ -1,9 +1,12 @@
 package fi.dy.masa.servux.network;
 
 import java.util.HashMap;
-import net.fabricmc.fabric.api.networking.v1.S2CPlayChannelEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
+import lol.bai.badpackets.api.play.PlayPackets;
+//import net.fabricmc.fabric.api.networking.v1.S2CPlayChannelEvents;
+//import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+
+import lol.bai.badpackets.impl.registry.ChannelRegistry;
 import net.minecraft.util.Identifier;
 
 public class ServerPacketChannelHandler
@@ -28,19 +31,37 @@ public class ServerPacketChannelHandler
 
                 if (handler.isSubscribable())
                 {
-                    S2CPlayChannelEvents.REGISTER.register((net, server, sender, channels) -> {
+                    PlayPackets.registerServerReadyCallback((net, sender, server) -> {
+                        var channels = ChannelRegistry.PLAY_S2C.getChannels();
+
                         if (channels.contains(channel))
                         {
                             handler.subscribe(net);
                         }
                     });
-                    S2CPlayChannelEvents.UNREGISTER.register((net, server, sender, channels) -> {
+
+                    PlayPackets.registerServerReadyCallback((net, sender, server) -> {
+                        var channels = ChannelRegistry.PLAY_S2C.getChannels();
+
                         if (channels.contains(channel))
                         {
                             handler.unsubscribe(net);
                         }
                     });
-                    ServerPlayNetworking.registerGlobalReceiver(channel, handler.getServerPacketHandler());
+//                    S2CPlayChannelEvents.REGISTER.register((net, server, sender, channels) -> {
+//                        if (channels.contains(channel))
+//                        {
+//                            handler.subscribe(net);
+//                        }
+//                    });
+//                    S2CPlayChannelEvents.UNREGISTER.register((net, server, sender, channels) -> {
+//                        if (channels.contains(channel))
+//                        {
+//                            handler.unsubscribe(net);
+//                        }
+//                    });
+                    PlayPackets.registerServerReceiver(channel, handler.getServerPacketHandler());
+                    //ServerPlayNetworking.registerGlobalReceiver(channel, handler.getServerPacketHandler());
                 }
             }
         }
@@ -54,7 +75,8 @@ public class ServerPacketChannelHandler
 
             if (this.handlers.remove(channel, handler))
             {
-                ServerPlayNetworking.unregisterGlobalReceiver(channel);
+                ChannelRegistry.PLAY_S2C.getChannels().remove(channel);
+                //ServerPlayNetworking.unregisterGlobalReceiver(channel);
             }
         }
     }

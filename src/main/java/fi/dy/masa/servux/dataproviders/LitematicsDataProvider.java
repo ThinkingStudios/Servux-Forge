@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import fi.dy.masa.servux.util.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
@@ -26,10 +27,6 @@ import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.selection.Box;
-import fi.dy.masa.servux.util.EntityUtils;
-import fi.dy.masa.servux.util.JsonUtils;
-import fi.dy.masa.servux.util.NBTUtils;
-import fi.dy.masa.servux.util.PositionUtils;
 import org.thinkingstudio.neopermissions.api.v0.Permissions;
 
 public class LitematicsDataProvider extends DataProviderBase
@@ -58,7 +55,11 @@ public class LitematicsDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        HANDLER.registerPlayPayload(ServuxLitematicaPacket.Payload.ID, ServuxLitematicaPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+        if (this.isRegistered() == false)
+        {
+            HANDLER.registerPlayPayload(ServuxLitematicaPacket.Payload.ID, ServuxLitematicaPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+            this.setRegistered(true);
+        }
         HANDLER.registerPlayReceiver(ServuxLitematicaPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -80,7 +81,7 @@ public class LitematicsDataProvider extends DataProviderBase
         if (!this.hasPermission(player))
         {
             // No Permission
-            Servux.logger.warn("litematic_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.debugLog("litematic_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
             return;
         }
 
@@ -134,7 +135,7 @@ public class LitematicsDataProvider extends DataProviderBase
     {
         if (this.hasPermission(player) == false)
         {
-            Servux.logger.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getLiteralString());
+            //Servux.logger.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getLiteralString());
             return;
         }
         if (req == null || req.isEmpty())
@@ -150,66 +151,73 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        long timeStart = System.currentTimeMillis();
-        NbtList tileList = new NbtList();
-        NbtList entityList = new NbtList();
-        int minY = req.getInt("minY");
-        int maxY = req.getInt("maxY");
-        BlockPos pos1 = new BlockPos(chunkPos.getStartX(), minY, chunkPos.getStartZ());
-        BlockPos pos2 = new BlockPos(chunkPos.getEndX(), maxY, chunkPos.getEndZ());
-        net.minecraft.util.math.Box bb = PositionUtils.createEnclosingAABB(pos1, pos2);
-        Set<BlockPos> teSet = chunk.getBlockEntityPositions();
-        List<Entity> entities = world.getOtherEntities(null, bb, EntityUtils.NOT_PLAYER);
-
-        for (BlockPos tePos : teSet)
+        // TODO --> Split out the task this way (I should have done this under 0.3.0),
+        //  So we need to check if the "Task" is not included for now... (Wait for the updates to bake in)
+        if ((req.contains("Task") && req.getString("Task").equals("BulkEntityRequest")) ||
+            req.contains("Task") == false)
         {
-            if ((tePos.getX() < chunkPos.getStartX() || tePos.getX() > chunkPos.getEndX()) ||
-                (tePos.getZ() < chunkPos.getStartZ() || tePos.getZ() > chunkPos.getEndZ()) ||
-                (tePos.getY() < minY || tePos.getY() > maxY))
+            long timeStart = System.currentTimeMillis();
+            NbtList tileList = new NbtList();
+            NbtList entityList = new NbtList();
+            int minY = req.getInt("minY");
+            int maxY = req.getInt("maxY");
+            BlockPos pos1 = new BlockPos(chunkPos.getStartX(), minY, chunkPos.getStartZ());
+            BlockPos pos2 = new BlockPos(chunkPos.getEndX(), maxY, chunkPos.getEndZ());
+            net.minecraft.util.math.Box bb = PositionUtils.createEnclosingAABB(pos1, pos2);
+            Set<BlockPos> teSet = chunk.getBlockEntityPositions();
+            List<Entity> entities = world.getOtherEntities(null, bb, EntityUtils.NOT_PLAYER);
+
+            for (BlockPos tePos : teSet)
             {
-                continue;
+                if ((tePos.getX() < chunkPos.getStartX() || tePos.getX() > chunkPos.getEndX()) ||
+                        (tePos.getZ() < chunkPos.getStartZ() || tePos.getZ() > chunkPos.getEndZ()) ||
+                        (tePos.getY() < minY || tePos.getY() > maxY))
+                {
+                    continue;
+                }
+
+                BlockEntity be = world.getBlockEntity(tePos);
+                NbtCompound beTag = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
+                tileList.add(beTag);
             }
 
-            BlockEntity be = world.getBlockEntity(tePos);
-            NbtCompound beTag = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
-            tileList.add(beTag);
-        }
-
-        for (Entity entity : entities)
-        {
-            NbtCompound entTag = new NbtCompound();
-
-            if (entity.saveNbt(entTag))
+            for (Entity entity : entities)
             {
-                Vec3d posVec = new Vec3d(entity.getX() - pos1.getX(), entity.getY() - pos1.getY(), entity.getZ() - pos1.getZ());
-                NBTUtils.writeEntityPositionToTag(posVec, entTag);
-                entTag.putInt("entityId", entity.getId());
-                entityList.add(entTag);
+                NbtCompound entTag = new NbtCompound();
+
+                if (entity.saveNbt(entTag))
+                {
+                    Vec3d posVec = new Vec3d(entity.getX() - pos1.getX(), entity.getY() - pos1.getY(), entity.getZ() - pos1.getZ());
+                    NBTUtils.writeEntityPositionToTag(posVec, entTag);
+                    entTag.putInt("entityId", entity.getId());
+                    entityList.add(entTag);
+                }
             }
+
+            NbtCompound output = new NbtCompound();
+            output.putString("Task", "BulkEntityReply");
+            output.put("TileEntities", tileList);
+            output.put("Entities", entityList);
+            output.putInt("chunkX", chunkPos.x);
+            output.putInt("chunkZ", chunkPos.z);
+            long timeElapsed = System.currentTimeMillis() - timeStart;
+
+            HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
+            //player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
         }
-
-        NbtCompound output = new NbtCompound();
-        output.put("TileEntities", tileList);
-        output.put("Entities", entityList);
-        output.putInt("chunkX", chunkPos.x);
-        output.putInt("chunkZ", chunkPos.z);
-        long timeElapsed = System.currentTimeMillis() - timeStart;
-
-        HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
-        //player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
     }
 
     public void handleClientPasteRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
     {
         if (this.hasPermission(player) == false || this.hasPermissionsForPaste(player) == false)
         {
-            Servux.logger.warn("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().getLiteralString());
+            Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().getLiteralString());
             player.sendMessage(Text.literal("§cInsufficient Permissions for the Litematic paste operation.§r"));
             return;
         }
         if (player.isCreative() == false)
         {
-            Servux.logger.warn("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().getLiteralString());
+            Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().getLiteralString());
             player.sendMessage(Text.literal("§cCreative Mode is required for the Litematic paste operation.§r"));
             return;
         }
@@ -219,7 +227,8 @@ public class LitematicsDataProvider extends DataProviderBase
         {
             long timeStart = System.currentTimeMillis();
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
-            placement.pasteTo(player.getServerWorld());
+            ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode"));
+            placement.pasteTo(player.getServerWorld(), replaceMode);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
         }
@@ -245,6 +254,18 @@ public class LitematicsDataProvider extends DataProviderBase
     public boolean hasPermission(ServerPlayerEntity player)
     {
         return Permissions.check(player, this.permNode, this.permissionLevel > -1 ? this.permissionLevel : this.defaultPerm);
+    }
+
+    @Override
+    public void onTickEndPre()
+    {
+        // NO-OP
+    }
+
+    @Override
+    public void onTickEndPost()
+    {
+        // NO-OP
     }
 
     public boolean hasPermissionsForPaste(ServerPlayerEntity player)

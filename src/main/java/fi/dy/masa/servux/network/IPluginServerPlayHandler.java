@@ -23,12 +23,13 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
+import org.thinkingstudio.sevuxforged.network.ServerPlayPayloadHandler;
 
 /**
  * Interface for ServerPlayHandler
  * @param <T> (Payload Param)
  */
-public interface IPluginServerPlayHandler<T extends CustomPayload> extends PacketReceiver<ServerPlayContext, T>
+public interface IPluginServerPlayHandler<T extends CustomPayload> extends ServerPlayPayloadHandler<T>
 {
     int FROM_SERVER = 1;
     int TO_SERVER = 2;
@@ -212,7 +213,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
         }
         else
         {
-            Servux.logger.warn("sendPlayPayload: [BadPackets] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
+            Servux.logger.warn("sendPlayPayload: [Fabric-API] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
         }
 
         return false;

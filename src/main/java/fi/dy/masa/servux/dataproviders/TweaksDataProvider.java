@@ -11,25 +11,25 @@ import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
-import fi.dy.masa.servux.network.packet.ServuxEntitiesHandler;
-import fi.dy.masa.servux.network.packet.ServuxEntitiesPacket;
+import fi.dy.masa.servux.network.packet.ServuxTweaksHandler;
+import fi.dy.masa.servux.network.packet.ServuxTweaksPacket;
 import fi.dy.masa.servux.util.JsonUtils;
 import org.thinkingstudio.neopermissions.api.v0.Permissions;
 
-public class EntitiesDataProvider extends DataProviderBase
+public class TweaksDataProvider extends DataProviderBase
 {
-    public static final EntitiesDataProvider INSTANCE = new EntitiesDataProvider();
-    protected final static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> HANDLER = ServuxEntitiesHandler.getInstance();
+    public static final TweaksDataProvider INSTANCE = new TweaksDataProvider();
+    protected final static ServuxTweaksHandler<ServuxTweaksPacket.Payload> HANDLER = ServuxTweaksHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
     protected int permissionLevel = -1;
 
-    protected EntitiesDataProvider()
+    protected TweaksDataProvider()
     {
-        super("entity_data",
-                ServuxEntitiesHandler.CHANNEL_ID,
-                ServuxEntitiesPacket.PROTOCOL_VERSION,
-                0, Reference.MOD_ID+ ".provider.entity_data",
-                "Entity Data provider for Client Side mods.");
+        super("tweaks_data",
+                ServuxTweaksHandler.CHANNEL_ID,
+                ServuxTweaksPacket.PROTOCOL_VERSION,
+                0, Reference.MOD_ID+ ".provider.tweaks_data",
+                "Tweaks Data provider for Client Side mods.");
 
         this.metadata.putString("name", this.getName());
         this.metadata.putString("id", this.getNetworkChannel().toString());
@@ -43,10 +43,10 @@ public class EntitiesDataProvider extends DataProviderBase
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
         if (this.isRegistered() == false)
         {
-            HANDLER.registerPlayPayload(ServuxEntitiesPacket.Payload.ID, ServuxEntitiesPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+            HANDLER.registerPlayPayload(ServuxTweaksPacket.Payload.ID, ServuxTweaksPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
             this.setRegistered(true);
         }
-        HANDLER.registerPlayReceiver(ServuxEntitiesPacket.Payload.ID, HANDLER::receivePlayPayload);
+        HANDLER.registerPlayReceiver(ServuxTweaksPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
     @Override
@@ -62,26 +62,25 @@ public class EntitiesDataProvider extends DataProviderBase
         return HANDLER;
     }
 
-
     public void sendMetadata(ServerPlayerEntity player)
     {
         if (this.hasPermission(player) == false)
         {
             // No Permission
-            Servux.debugLog("entity_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.debugLog("tweaks_service: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
             return;
         }
 
-        //Servux.logger.warn("entityDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
+        //Servux.logger.warn("tweaksDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
         {
-            HANDLER.sendPlayPayload(player.networkHandler, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.MetadataResponse(this.metadata)));
+            HANDLER.sendPlayPayload(player.networkHandler, new ServuxTweaksPacket.Payload(ServuxTweaksPacket.MetadataResponse(this.metadata)));
         }
         else
         {
-            HANDLER.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.MetadataResponse(this.metadata)));
+            HANDLER.sendPlayPayload(player, new ServuxTweaksPacket.Payload(ServuxTweaksPacket.MetadataResponse(this.metadata)));
         }
     }
 
@@ -101,7 +100,7 @@ public class EntitiesDataProvider extends DataProviderBase
 
         BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
         NbtCompound nbt = be != null ? be.createNbt(player.getRegistryManager()) : new NbtCompound();
-        HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleBlockResponse(pos, nbt));
+        HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleBlockResponse(pos, nbt));
     }
 
     public void onEntityRequest(ServerPlayerEntity player, int entityId)
@@ -115,7 +114,7 @@ public class EntitiesDataProvider extends DataProviderBase
 
         Entity entity = player.getWorld().getEntityById(entityId);
         NbtCompound nbt = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
-        HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
+        HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt));
     }
 
     public void handleBulkClientRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
@@ -126,6 +125,17 @@ public class EntitiesDataProvider extends DataProviderBase
         }
 
         Servux.logger.warn("handleBulkClientRequest(): from player {} -- Not Implemented!", player.getName().getLiteralString());
+        // todo
+    }
+
+    public void handleClientBulkData(ServerPlayerEntity player, int transactionId, NbtCompound nbtCompound)
+    {
+        if (this.hasPermission(player) == false)
+        {
+            return;
+        }
+
+        Servux.logger.warn("handleClientBulkData(): from player {} -- Not Implemented!", player.getName().getLiteralString());
         // todo
     }
 

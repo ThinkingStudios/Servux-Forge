@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
 import lol.bai.badpackets.api.play.ServerPlayContext;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.network.PacketByteBuf;
@@ -17,23 +15,26 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.random.Random;
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
+import fi.dy.masa.servux.dataproviders.TweaksDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.IServerPayloadData;
 import fi.dy.masa.servux.network.PacketSplitter;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.DEDICATED_SERVER)
-public abstract class ServuxLitematicaHandler<T extends CustomPayload> implements IPluginServerPlayHandler<T>
+public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IPluginServerPlayHandler<T>
 {
-    private static final ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> INSTANCE = new ServuxLitematicaHandler<>() {
+    private static final ServuxTweaksHandler<ServuxTweaksPacket.Payload> INSTANCE = new ServuxTweaksHandler<>() {
         @Override
-        public void receive(ServerPlayContext context, ServuxLitematicaPacket.Payload payload) {
-            ServuxLitematicaHandler.INSTANCE.receivePlayPayload(context, payload);
+        public void receive(ServerPlayContext context, ServuxTweaksPacket.Payload payload)
+        {
+            ServuxTweaksHandler.INSTANCE.receivePlayPayload(context, payload);
         }
     };
-    public static ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> getInstance() { return INSTANCE; }
+    public static ServuxTweaksHandler<ServuxTweaksPacket.Payload> getInstance() { return INSTANCE; }
 
-    public static final Identifier CHANNEL_ID = Identifier.of("servux", "litematics");
+    public static final Identifier CHANNEL_ID = Identifier.of("servux", "tweaks");
 
     private boolean payloadRegistered = false;
     private final Map<UUID, Integer> failures = new HashMap<>();
@@ -66,7 +67,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
     @Override
     public <P extends IServerPayloadData> void decodeServerData(Identifier channel, ServerPlayerEntity player, P data)
     {
-        ServuxLitematicaPacket packet = (ServuxLitematicaPacket) data;
+        ServuxTweaksPacket packet = (ServuxTweaksPacket) data;
 
         if (!channel.equals(CHANNEL_ID))
         {
@@ -74,10 +75,9 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
         }
         switch (packet.getType())
         {
-            case PACKET_C2S_METADATA_REQUEST -> LitematicsDataProvider.INSTANCE.sendMetadata(player);
-            case PACKET_C2S_BLOCK_ENTITY_REQUEST -> LitematicsDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
-            case PACKET_C2S_ENTITY_REQUEST -> LitematicsDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
-            case PACKET_C2S_BULK_ENTITY_NBT_REQUEST -> LitematicsDataProvider.INSTANCE.onBulkEntityRequest(player, packet.getChunkPos(), packet.getCompound());
+            case PACKET_C2S_METADATA_REQUEST -> TweaksDataProvider.INSTANCE.sendMetadata(player);
+            case PACKET_C2S_BLOCK_ENTITY_REQUEST -> TweaksDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
+            case PACKET_C2S_ENTITY_REQUEST -> TweaksDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
             case PACKET_C2S_NBT_RESPONSE_DATA ->
             {
                 UUID uuid = player.getUuid();
@@ -93,7 +93,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                     readingSessionKey = this.readingSessionKeys.get(uuid);
                 }
 
-                //Servux.debugLog("ServuxLitematicaHandler#decodeServerData(): received Litematic Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                //Servux.debugLog("ServuxTweaksHandler#decodeServerData(): received Litematic Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
                 PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
 
                 if (fullPacket != null)
@@ -101,15 +101,15 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                     try
                     {
                         this.readingSessionKeys.remove(uuid);
-                        LitematicsDataProvider.INSTANCE.handleClientPasteRequest(player, fullPacket.readVarInt(), (NbtCompound) fullPacket.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
+                        TweaksDataProvider.INSTANCE.handleClientBulkData(player, fullPacket.readVarInt(), (NbtCompound) fullPacket.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                     }
                     catch (Exception e)
                     {
-                        Servux.logger.error("ServuxLitematicaHandler#decodeServerData(): Litematic Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
+                        Servux.logger.error("ServuxTweaksHandler#decodeServerData(): Litematic Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
                     }
                 }
             }
-            default -> Servux.logger.warn("ServuxLitematicaHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+            default -> Servux.logger.warn("ServuxTweaksHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
     }
 
@@ -136,7 +136,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
         if (payload.getId().id().equals(CHANNEL_ID))
         {
             ServerPlayerEntity player = ctx.player();
-            ServuxLitematicaHandler.INSTANCE.decodeServerData(CHANNEL_ID, player, ((ServuxLitematicaPacket.Payload) payload).data());
+            ServuxTweaksHandler.INSTANCE.decodeServerData(CHANNEL_ID, player, ((ServuxTweaksPacket.Payload) payload).data());
         }
     }
 
@@ -144,23 +144,23 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
     public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buffer, ServerPlayNetworkHandler networkHandler)
     {
         // Send each PacketSplitter buffer slice
-        ServuxLitematicaHandler.INSTANCE.sendPlayPayload(player, new ServuxLitematicaPacket.Payload(ServuxLitematicaPacket.ResponseS2CData(buffer)));
+        ServuxTweaksHandler.INSTANCE.sendPlayPayload(player, new ServuxTweaksPacket.Payload(ServuxTweaksPacket.ResponseS2CData(buffer)));
     }
 
     @Override
     public <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data)
     {
-        ServuxLitematicaPacket packet = (ServuxLitematicaPacket) data;
+        ServuxTweaksPacket packet = (ServuxTweaksPacket) data;
 
         // Send Response Data via Packet Splitter
-        if (packet.getType().equals(ServuxLitematicaPacket.Type.PACKET_S2C_NBT_RESPONSE_START))
+        if (packet.getType().equals(ServuxTweaksPacket.Type.PACKET_S2C_NBT_RESPONSE_START))
         {
             PacketByteBuf buffer = new PacketByteBuf(Unpooled.buffer());
             buffer.writeVarInt(packet.getTransactionId());
             buffer.writeNbt(packet.getCompound());
             PacketSplitter.send(this, buffer, player, player.networkHandler);
         }
-        else if (!ServuxLitematicaHandler.INSTANCE.sendPlayPayload(player, new ServuxLitematicaPacket.Payload(packet)))
+        else if (!ServuxTweaksHandler.INSTANCE.sendPlayPayload(player, new ServuxTweaksPacket.Payload(packet)))
         {
             UUID id = player.getUuid();
 
@@ -171,8 +171,8 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
             }
             else if (this.failures.get(id) > MAX_FAILURES)
             {
-                //Servux.logger.info("Unregistering Entities Client {} after {} failures (Litematica not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
-                LitematicsDataProvider.INSTANCE.onPacketFailure(player);
+                //Servux.logger.info("Unregistering Entities Client {} after {} failures (Tweakeroo not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                TweaksDataProvider.INSTANCE.onPacketFailure(player);
             }
             else
             {

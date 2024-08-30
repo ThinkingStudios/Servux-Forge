@@ -22,7 +22,7 @@ config = "servux.mixins.json"
 [[dependencies.servux]]
 modId = "neoforge"
 type = "required"
-versionRange = "[20,)"
+versionRange = "[21,)"
 ordering = "NONE"
 side = "SERVER"
 

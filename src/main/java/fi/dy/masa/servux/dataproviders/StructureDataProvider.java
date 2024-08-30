@@ -2,19 +2,24 @@ package fi.dy.masa.servux.dataproviders;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.settings.ServuxStringListSetting;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructureStart;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.GameRules;
@@ -29,7 +34,6 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxStructuresHandler;
 import fi.dy.masa.servux.network.packet.ServuxStructuresPacket;
-import fi.dy.masa.servux.util.JsonUtils;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 import org.thinkingstudio.neopermissions.api.v0.Permissions;
@@ -42,10 +46,15 @@ public class StructureDataProvider extends DataProviderBase
     protected final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
-    protected int timeout = 30 * 20;
-    protected int updateInterval = 40;
     protected int retainDistance;
-    protected int permissionLevel = -1;
+    private ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+    private ServuxBoolSetting structureBlacklistEnabled = new ServuxBoolSetting(this, "structures_blacklist_enabled", false);
+    private ServuxBoolSetting structureWhitelistEnabled = new ServuxBoolSetting(this, "structures_whitelist_enabled", false);
+    private ServuxStringListSetting structureBlacklist = new ServuxStringListSetting(this, "structures_blacklist", List.of("minecraft:buried_treasure"));
+    private ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
+    private ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
+    private ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
+    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout);
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
@@ -64,13 +73,19 @@ public class StructureDataProvider extends DataProviderBase
         this.metadata.putString("id", this.getNetworkChannel().toString());
         this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
-        this.metadata.putInt("timeout", this.timeout);
+        this.metadata.putInt("timeout", timeout.getValue());
 
         // TODO --> Move out of structures channel in the future
         this.metadata.putInt("spawnPosX", this.getSpawnPos().getX());
         this.metadata.putInt("spawnPosY", this.getSpawnPos().getY());
         this.metadata.putInt("spawnPosZ", this.getSpawnPos().getZ());
         this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
+    }
+
+    @Override
+    public List<IServuxSetting<?>> getSettings()
+    {
+        return settings;
     }
 
     @Override
@@ -107,7 +122,7 @@ public class StructureDataProvider extends DataProviderBase
     @Override
     public void tick(MinecraftServer server, int tickCounter)
     {
-        if ((tickCounter % this.updateInterval) == 0)
+        if ((tickCounter % updateInterval.getValue()) == 0)
         {
             //Servux.printDebug("=======================\n");
             //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
@@ -244,11 +259,10 @@ public class StructureDataProvider extends DataProviderBase
         if (this.chunkHasStructureReferences(pos.x, pos.z, chunk.getWorld()))
         {
             final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
-            final int timeout = this.timeout;
 
             //System.out.printf("addChunkTimeoutIfHasReferences: %s\n", pos);
             // Set the timeout so it's already expired and will cause the chunk to be sent on the next update tick
-            map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout));
+            map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout.getValue()));
         }
     }
 
@@ -309,7 +323,7 @@ public class StructureDataProvider extends DataProviderBase
         {
             Timeout timeout = entry.getValue();
 
-            if (timeout.needsUpdate(tickCounter, this.timeout))
+            if (timeout.needsUpdate(tickCounter, this.timeout.getValue()))
             {
                 positionsToUpdate.add(entry.getKey());
             }
@@ -495,8 +509,12 @@ public class StructureDataProvider extends DataProviderBase
 
         for (Map.Entry<ChunkPos, StructureStart> entry : structures.entrySet())
         {
-            ChunkPos pos = entry.getKey();
-            list.add(entry.getValue().toNbt(ctx, pos));
+            Identifier structureType = Registries.STRUCTURE_TYPE.getId(entry.getValue().getStructure().getType());
+            if (this.shouldSendStructure(structureType))
+            {
+                ChunkPos pos = entry.getKey();
+                list.add(entry.getValue().toNbt(ctx, pos));
+            }
         }
 
         return list;
@@ -578,18 +596,10 @@ public class StructureDataProvider extends DataProviderBase
         Servux.debugLog("setRefreshSpawnMetadataComplete()");
     }
 
-    protected void setPermissionLevel(int level)
-    {
-        if (!(level < 0 || level > 4))
-        {
-            this.permissionLevel = level;
-        }
-    }
-
     @Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
-        return Permissions.check(player, this.permNode, this.permissionLevel > -1 ? this.permissionLevel : this.defaultPerm);
+        return Permissions.check(player, this.permNode, permissionLevel.getValue());
     }
 
     @Override
@@ -604,29 +614,17 @@ public class StructureDataProvider extends DataProviderBase
         // NO-OP
     }
 
-    @Override
-    public JsonObject toJson()
+    public boolean shouldSendStructure(Identifier identifier)
     {
-        JsonObject obj = new JsonObject();
-
-        if (this.permissionLevel > -1)
+        if (structureWhitelistEnabled.getValue())
         {
-            obj.add("permission_level", new JsonPrimitive(this.permissionLevel));
+            return structureWhitelist.getValue().contains(identifier.toString());
         }
-        else
+        if (structureBlacklistEnabled.getValue())
         {
-            obj.add("permission_level", new JsonPrimitive(this.defaultPerm));
+            return !structureBlacklist.getValue().contains(identifier.toString());
         }
 
-        return obj;
-    }
-
-    @Override
-    public void fromJson(JsonObject obj)
-    {
-        if (JsonUtils.hasInteger(obj, "permission_level"))
-        {
-            this.setPermissionLevel(JsonUtils.getInteger(obj, "permission_level"));
-        }
+        return true;
     }
 }

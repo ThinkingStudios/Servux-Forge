@@ -9,8 +9,6 @@ import lol.bai.badpackets.api.PacketSender;
 import lol.bai.badpackets.api.play.PlayPackets;
 import lol.bai.badpackets.api.play.ServerPlayContext;
 import lol.bai.badpackets.impl.registry.ChannelRegistry;
-//import org.thinkingstudio.fabric.api.networking.v1.PayloadTypeRegistry;
-//import org.thinkingstudio.fabric.api.networking.v1.ServerPlayNetworking;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
@@ -23,13 +21,12 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
-import org.thinkingstudio.sevuxforged.network.ServerPlayPayloadHandler;
 
 /**
  * Interface for ServerPlayHandler
  * @param <T> (Payload Param)
  */
-public interface IPluginServerPlayHandler<T extends CustomPayload> extends ServerPlayPayloadHandler<T>
+public interface IPluginServerPlayHandler<T extends CustomPayload> extends PacketReceiver<ServerPlayContext, T>
 {
     int FROM_SERVER = 1;
     int TO_SERVER = 2;
@@ -64,8 +61,8 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     void reset(Identifier channel);
 
     /**
-     * Register your Payload with BadPackets.
-     * See the BadPackets Java Docs under PlayPackets -> registerServerChannel() and PlayPackets -> registerClientChannel()
+     * Register your Payload with Fabric API.
+     * See the fabric-networking-api-v1 Java Docs under PayloadTypeRegistry -> register()
      * for more information on how to do this.
      * -
      * @param direction (Payload Direction)
@@ -137,7 +134,6 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     default void unregisterPlayReceiver()
     {
         ChannelRegistry.PLAY_S2C.getChannels().remove(this.getPayloadChannel());
-        //ServerPlayNetworking.unregisterGlobalReceiver(this.getPayloadChannel());
     }
 
     /**

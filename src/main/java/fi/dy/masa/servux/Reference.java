@@ -3,7 +3,7 @@ package fi.dy.masa.servux;
 import java.io.File;
 import net.minecraft.MinecraftVersion;
 import fi.dy.masa.servux.util.StringUtils;
-import net.neoforged.fml.loading.FMLPaths;
+import org.thinkingstudio.sevuxforged.loader.FoxifiedLoader;
 
 public class Reference
 {
@@ -14,6 +14,6 @@ public class Reference
     public static final String MOD_TYPE = "neoforge";
     public static final String MOD_STRING = MOD_ID + "-" + MOD_TYPE + "-" + MC_VERSION + "-" + MOD_VERSION;
 
-    public static final File DEFAULT_RUN_DIR = FMLPaths.GAMEDIR.get().toFile();
-    public static final File DEFAULT_CONFIG_DIR = FMLPaths.CONFIGDIR.get().toFile();
+    public static final File DEFAULT_RUN_DIR = FoxifiedLoader.getGameDir().toFile();
+    public static final File DEFAULT_CONFIG_DIR = FoxifiedLoader.getConfigDir().toFile();
 }

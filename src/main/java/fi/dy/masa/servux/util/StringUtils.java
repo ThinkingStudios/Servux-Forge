@@ -4,19 +4,13 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.text.MutableText;
 import net.minecraft.util.Identifier;
-import net.neoforged.fml.loading.FMLLoader;
-import net.neoforged.fml.loading.moddiscovery.ModInfo;
+import org.thinkingstudio.sevuxforged.util.NeoUtils;
 
 public class StringUtils
 {
-    public static String getModVersionString(String modId) {
-        for(ModInfo modInfo: FMLLoader.getLoadingModList().getMods()) {
-            if(modInfo.getModId().equals(modId)) {
-                return modInfo.getVersion().toString();
-            }
-        }
-
-        return "?";
+    public static String getModVersionString(String modId)
+    {
+        return NeoUtils.getModArtifactVersion(modId).toString();
     }
 
     public static String removeDefaultMinecraftNamespace(Identifier settingId)

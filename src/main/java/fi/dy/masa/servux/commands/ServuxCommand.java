@@ -2,11 +2,13 @@ package fi.dy.masa.servux.commands;
 
 import java.util.*;
 
+import org.thinkingstudio.neopermissions.api.v0.Permissions;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.IdentifierArgumentType;
@@ -25,7 +27,6 @@ import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import fi.dy.masa.servux.interfaces.IServerCommand;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.util.StringUtils;
-import org.thinkingstudio.neopermissions.api.v0.Permissions;
 
 public class ServuxCommand implements IServerCommand
 {

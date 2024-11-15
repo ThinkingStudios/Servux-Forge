@@ -4,18 +4,18 @@ import java.util.List;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import fi.dy.masa.servux.settings.ServuxStringSetting;
-import fi.dy.masa.servux.util.i18nLang;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+
 import fi.dy.masa.servux.Reference;
-import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.settings.ServuxStringSetting;
 import fi.dy.masa.servux.util.StringUtils;
+import fi.dy.masa.servux.util.i18nLang;
 import org.thinkingstudio.neopermissions.api.v0.Permissions;
 
 public class ServuxConfigProvider extends DataProviderBase
@@ -76,12 +76,6 @@ public class ServuxConfigProvider extends DataProviderBase
     public void unregisterHandler()
     {
         // NO-OP
-    }
-
-    @Override
-    public IPluginServerPlayHandler<?> getPacketHandler()
-    {
-        return null;
     }
 
     public void doReloadConfig(ServerCommandSource source)

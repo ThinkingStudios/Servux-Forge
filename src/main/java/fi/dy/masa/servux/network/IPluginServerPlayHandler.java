@@ -3,7 +3,6 @@ package fi.dy.masa.servux.network;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
-
 import lol.bai.badpackets.api.PacketReceiver;
 import lol.bai.badpackets.api.PacketSender;
 import lol.bai.badpackets.api.play.PlayPackets;
@@ -209,7 +208,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
         }
         else
         {
-            Servux.logger.warn("sendPlayPayload: [Fabric-API] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
+            Servux.logger.warn("sendPlayPayload: [BadPackets] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
         }
 
         return false;

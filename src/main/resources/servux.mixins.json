@@ -6,13 +6,20 @@
 	"mixins": [
 		"MixinBlockItem",
 		"MixinCommandManager",
+		"MixinMain",
+		"MixinMinecraftDedicatedServer",
 		"MixinMinecraftServer",
 		"MixinPlayerManager",
+		"MixinRailBlocks",
 		"MixinServerChunkLoadingManager",
 		"MixinServerPlayNetworkHandler",
 		"MixinServerWorld",
 		"MixinWorld",
-		"MixinWorldChunk"
+		"MixinWorldChunk",
+		"debug.IMixinMobEntity",
+		"debug.MixinDebugInfoSender",
+		"debug.MixinPath",
+		"debug.MixinSharedConstants"
 	],
 	"injectors": {
 		"defaultRequire": 1

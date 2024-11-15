@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Set;
 
 import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.util.*;
+import org.thinkingstudio.neopermissions.api.v0.Permissions;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
@@ -24,8 +26,6 @@ import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
-import net.neoforged.neoforge.server.permission.PermissionAPI;
-import org.thinkingstudio.neopermissions.api.v0.Permissions;
 
 public class LitematicsDataProvider extends DataProviderBase
 {
@@ -38,7 +38,8 @@ public class LitematicsDataProvider extends DataProviderBase
     protected ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this,
             "permission_level_paste",
             0, 4, 0);
-    private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel);
+    public ServuxBoolSetting fixRaiLRotations = new ServuxBoolSetting(this, "fix_rail_rotations", true);
+    private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel, this.fixRaiLRotations);
 
     protected LitematicsDataProvider()
     {
@@ -94,7 +95,7 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        //Servux.logger.warn("LitematicsDataProvider#sendMetadata: sendMetadata to player {}", player.getName().getLiteralString());
+        Servux.debugLog("litematic_data: sendMetadata to player {}", player.getName().getLiteralString());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
@@ -122,7 +123,7 @@ public class LitematicsDataProvider extends DataProviderBase
         //Servux.logger.warn("LitematicsDataProvider#onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
         BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
-        NbtCompound nbt = be != null ? be.createNbt(player.getRegistryManager()) : new NbtCompound();
+        NbtCompound nbt = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
         HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleBlockResponse(pos, nbt));
     }
 
@@ -136,8 +137,12 @@ public class LitematicsDataProvider extends DataProviderBase
         //Servux.logger.warn("LitematicsDataProvider#onEntityRequest(): from player {}", player.getName().getLiteralString());
 
         Entity entity = player.getWorld().getEntityById(entityId);
-        NbtCompound nbt = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
-        HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleEntityResponse(entityId, nbt));
+        NbtCompound nbt = new NbtCompound();
+
+        if (entity != null && entity.saveSelfNbt(nbt))
+        {
+            HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleEntityResponse(entityId, nbt));
+        }
     }
 
     public void onBulkEntityRequest(ServerPlayerEntity player, ChunkPos chunkPos, NbtCompound req)

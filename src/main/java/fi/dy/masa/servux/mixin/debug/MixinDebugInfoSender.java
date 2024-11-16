@@ -11,6 +11,7 @@ import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.mob.BreezeEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.passive.BeeEntity;
+import net.minecraft.network.packet.s2c.custom.DebugRedstoneUpdateOrderCustomPayload;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.DebugInfoSender;
 import net.minecraft.server.world.ServerWorld;
@@ -101,13 +102,11 @@ public class MixinDebugInfoSender
         }
     }
 
-    /*
     @Inject(method = "sendRedstoneUpdateOrder", at = @At("HEAD"))
     private static void servux_onSendRedstoneUpdateOrder(World world, DebugRedstoneUpdateOrderCustomPayload payload, CallbackInfo ci)
     {
         // NO-OP
     }
-     */
 
     @Inject(method = "sendStructureStart", at = @At("HEAD"))
     private static void servux_onSendStructureStart(StructureWorldAccess world, StructureStart structureStart, CallbackInfo ci)

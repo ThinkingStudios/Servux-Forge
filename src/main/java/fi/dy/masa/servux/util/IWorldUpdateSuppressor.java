@@ -2,7 +2,7 @@ package fi.dy.masa.servux.util;
 
 public interface IWorldUpdateSuppressor
 {
-    boolean servux_getShouldPreventBlockUpdates();
+    boolean litematica_getShouldPreventBlockUpdates();
 
-    void servux_setShouldPreventBlockUpdates(boolean preventUpdates);
+    void litematica_setShouldPreventBlockUpdates(boolean preventUpdates);
 }

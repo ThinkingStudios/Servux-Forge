@@ -1,12 +1,12 @@
 [versions]
 # Base properties
-minecraft_version="1.21.1"
-yarn_mappings="1.21.1+build.3"
+minecraft_version="1.21.3"
+yarn_mappings="1.21.3+build.2"
 mappings_patch="1.21+build.4"
-neoforge="21.1.31"
+neoforge="21.3.29-beta"
 
 # Mod properties
-version="0.1.4"
+version="0.1.5"
 maven-group="org.thinkingstudio.servuxforged"
 archives-name="ServuxForged"
 
@@ -21,7 +21,7 @@ badpackets="neo-0.8.1"
 jsr305="3.0.2"
 
 # Gradle plugin
-architectury-loom = "1.6-SNAPSHOT"
+architectury-loom = "1.7-SNAPSHOT"
 modpublisher = "2.+"
 
 [libraries]

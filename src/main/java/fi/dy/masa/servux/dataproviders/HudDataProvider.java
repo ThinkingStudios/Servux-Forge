@@ -1,10 +1,17 @@
 package fi.dy.masa.servux.dataproviders;
 
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.thinkingstudio.neopermissions.api.v0.Permissions;
 
+import com.mojang.serialization.DataResult;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.recipe.Recipe;
+import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -268,31 +275,6 @@ public class HudDataProvider extends DataProviderBase
         HANDLER.encodeServerData(player, ServuxHudPacket.WeatherTick(nbt));
     }
 
-    @Deprecated(forRemoval = true)
-    public NbtCompound cloneWeatherData()
-    {
-        NbtCompound nbt = new NbtCompound();
-
-        if (this.isRaining && this.rainWeatherTime > -1)
-        {
-            nbt.putInt("SetRaining", this.rainWeatherTime);
-            nbt.putBoolean("isRaining", true);
-        }
-        if (this.isThundering && this.thunderWeatherTime > -1)
-        {
-            nbt.putInt("SetThundering", this.thunderWeatherTime);
-            nbt.putBoolean("isThundering", true);
-        }
-        if (this.clearWeatherTime > -1)
-        {
-            nbt.putInt("SetClear", this.clearWeatherTime);
-        }
-
-        return nbt;
-    }
-
-    // TODO 1.21.2 +
-    /*
     public void refreshRecipeManager(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
         if (this.hasPermission(player) == false)
@@ -329,7 +311,6 @@ public class HudDataProvider extends DataProviderBase
         // Use Packet Splitter
         HANDLER.encodeServerData(player, ServuxHudPacket.ResponseS2CStart(nbt));
     }
-     */
 
     public BlockPos getSpawnPos()
     {

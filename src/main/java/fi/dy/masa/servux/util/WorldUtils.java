@@ -6,11 +6,11 @@ public class WorldUtils
 {
     public static boolean shouldPreventBlockUpdates(World world)
     {
-        return ((IWorldUpdateSuppressor) world).servux_getShouldPreventBlockUpdates();
+        return ((IWorldUpdateSuppressor) world).litematica_getShouldPreventBlockUpdates();
     }
 
     public static void setShouldPreventBlockUpdates(World world, boolean preventUpdates)
     {
-        ((IWorldUpdateSuppressor) world).servux_setShouldPreventBlockUpdates(preventUpdates);
+        ((IWorldUpdateSuppressor) world).litematica_setShouldPreventBlockUpdates(preventUpdates);
     }
 }

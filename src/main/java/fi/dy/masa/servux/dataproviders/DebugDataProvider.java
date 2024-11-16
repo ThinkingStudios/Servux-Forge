@@ -30,6 +30,7 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.StructureTags;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureStart;
@@ -50,8 +51,11 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxDebugHandler;
 import fi.dy.masa.servux.network.packet.ServuxDebugPacket;
+import fi.dy.masa.servux.network.packet.ServuxHudPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.settings.ServuxStringListSetting;
 
 @SuppressWarnings({"unchecked", "deprecation"})
 public class DebugDataProvider extends DataProviderBase
@@ -239,7 +243,7 @@ public class DebugDataProvider extends DataProviderBase
             for (ServerPlayerEntity player : world.getPlayers())
             {
                 if (this.registeredPlayers.containsKey(player.getUuid()) &&
-                        player.networkHandler.accepts(packet))
+                    player.networkHandler.accepts(packet))
                 {
                     player.networkHandler.send(packet);
                 }
@@ -255,7 +259,7 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("chunk_watcher"))
         //{
-        this.sendDebugData(world, new DebugWorldgenAttemptCustomPayload(pos.getStartPos().up(100), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+            this.sendDebugData(world, new DebugWorldgenAttemptCustomPayload(pos.getStartPos().up(100), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
         //}
     }
 
@@ -267,12 +271,12 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("poi"))
         //{
-        world.getPointOfInterestStorage().getType(pos).ifPresent((registryEntry) ->
-                                                                 {
-                                                                     int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
-                                                                     String name = registryEntry.getIdAsString();
-                                                                     this.sendDebugData(world, new DebugPoiAddedCustomPayload(pos, name, tickets));
-                                                                 });
+            world.getPointOfInterestStorage().getType(pos).ifPresent((registryEntry) ->
+            {
+                int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
+                String name = registryEntry.getIdAsString();
+                this.sendDebugData(world, new DebugPoiAddedCustomPayload(pos, name, tickets));
+            });
         //}
     }
 
@@ -284,7 +288,7 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("poi"))
         //{
-        this.sendDebugData(world, new DebugPoiRemovedCustomPayload(pos));
+            this.sendDebugData(world, new DebugPoiRemovedCustomPayload(pos));
         //}
     }
 
@@ -296,8 +300,8 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("poi"))
         //{
-        int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
-        this.sendDebugData(world, new DebugPoiTicketCountCustomPayload(pos, tickets));
+            int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
+            this.sendDebugData(world, new DebugPoiTicketCountCustomPayload(pos, tickets));
         //}
     }
 
@@ -309,24 +313,24 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("poi"))
         //{
-        Registry<Structure> registry = world.getRegistryManager().get(RegistryKeys.STRUCTURE);
-        ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(pos);
-        Iterator<RegistryEntry<Structure>> iterator = registry.iterateEntries(StructureTags.VILLAGE).iterator();
+            Registry<Structure> registry = world.getRegistryManager().getOrThrow(RegistryKeys.STRUCTURE);
+            ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(pos);
+            Iterator<RegistryEntry<Structure>> iterator = registry.iterateEntries(StructureTags.VILLAGE).iterator();
 
-        RegistryEntry<Structure> entry;
-        do
-        {
-            if (!iterator.hasNext())
+            RegistryEntry<Structure> entry;
+            do
             {
-                this.sendDebugData(world, new DebugVillageSectionsCustomPayload(Set.of(), Set.of(chunkSectionPos)));
-                return;
+                if (!iterator.hasNext())
+                {
+                    this.sendDebugData(world, new DebugVillageSectionsCustomPayload(Set.of(), Set.of(chunkSectionPos)));
+                    return;
+                }
+
+                entry = iterator.next();
             }
+            while (world.getStructureAccessor().getStructureStarts(chunkSectionPos, entry.value()).isEmpty());
 
-            entry = iterator.next();
-        }
-        while (world.getStructureAccessor().getStructureStarts(chunkSectionPos, entry.value()).isEmpty());
-
-        this.sendDebugData(world, new DebugVillageSectionsCustomPayload(Set.of(chunkSectionPos), Set.of()));
+            this.sendDebugData(world, new DebugVillageSectionsCustomPayload(Set.of(chunkSectionPos), Set.of()));
         //}
     }
 
@@ -338,10 +342,10 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("pathfinding"))
         //{
-        if (path != null)
-        {
-            this.sendDebugData(world, new DebugPathCustomPayload(mob.getId(), path, nodeReachProximity));
-        }
+            if (path != null)
+            {
+                this.sendDebugData(world, new DebugPathCustomPayload(mob.getId(), path, nodeReachProximity));
+            }
         //}
     }
 
@@ -353,7 +357,7 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("neighbor_update"))
         //{
-        this.sendDebugData(world, new DebugNeighborsUpdateCustomPayload(world.getTime(), pos));
+            this.sendDebugData(world, new DebugNeighborsUpdateCustomPayload(world.getTime(), pos));
         //}
     }
 
@@ -365,15 +369,15 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("structures"))
         //{
-        List<DebugStructuresCustomPayload.Piece> pieces = new ArrayList<>();
+            List<DebugStructuresCustomPayload.Piece> pieces = new ArrayList<>();
 
-        for (int i = 0; i < structureStart.getChildren().size(); ++i)
-        {
-            pieces.add(new DebugStructuresCustomPayload.Piece(structureStart.getChildren().get(i).getBoundingBox(), i == 0));
-        }
+            for (int i = 0; i < structureStart.getChildren().size(); ++i)
+            {
+                pieces.add(new DebugStructuresCustomPayload.Piece(structureStart.getChildren().get(i).getBoundingBox(), i == 0));
+            }
 
-        ServerWorld serverWorld = world.toServerWorld();
-        this.sendDebugData(serverWorld, new DebugStructuresCustomPayload(serverWorld.getRegistryKey(), structureStart.getBoundingBox(), pieces));
+            ServerWorld serverWorld = world.toServerWorld();
+            this.sendDebugData(serverWorld, new DebugStructuresCustomPayload(serverWorld.getRegistryKey(), structureStart.getBoundingBox(), pieces));
         //}
     }
 
@@ -385,10 +389,10 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("goal_selector"))
         //{
-        List<DebugGoalSelectorCustomPayload.Goal> goals = ((IMixinMobEntity) mob).servux_getGoalSelector().getGoals().stream().map((goal) ->
-                                                                                                                                           new DebugGoalSelectorCustomPayload.Goal(goal.getPriority(), goal.isRunning(), goal.getGoal().toString())).toList();
+            List<DebugGoalSelectorCustomPayload.Goal> goals = ((IMixinMobEntity) mob).servux_getGoalSelector().getGoals().stream().map((goal) ->
+                    new DebugGoalSelectorCustomPayload.Goal(goal.getPriority(), goal.isRunning(), goal.getGoal().toString())).toList();
 
-        this.sendDebugData(world, new DebugGoalSelectorCustomPayload(mob.getId(), mob.getBlockPos(), goals));
+            this.sendDebugData(world, new DebugGoalSelectorCustomPayload(mob.getId(), mob.getBlockPos(), goals));
         //}
     }
 
@@ -400,7 +404,7 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("raids"))
         //{
-        this.sendDebugData(world, new DebugRaidsCustomPayload(raids.stream().map(Raid::getCenter).toList()));
+            this.sendDebugData(world, new DebugRaidsCustomPayload(raids.stream().map(Raid::getCenter).toList()));
         //}
     }
 
@@ -412,73 +416,73 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("brain"))
         //{
-        MobEntity entity = (MobEntity) livingEntity;
-        int angerLevel;
+            MobEntity entity = (MobEntity) livingEntity;
+            int angerLevel;
 
-        if (entity instanceof WardenEntity wardenEntity)
-        {
-            angerLevel = wardenEntity.getAnger();
-        }
-        else
-        {
-            angerLevel = -1;
-        }
+            if (entity instanceof WardenEntity wardenEntity)
+            {
+                angerLevel = wardenEntity.getAnger();
+            }
+            else
+            {
+                angerLevel = -1;
+            }
 
-        List<String> gossips = new ArrayList<>();
-        Set<BlockPos> pois = new HashSet<>();
-        Set<BlockPos> potentialPois = new HashSet<>();
-        String profession;
-        int xp;
-        String inventory;
-        boolean wantsGolem;
+            List<String> gossips = new ArrayList<>();
+            Set<BlockPos> pois = new HashSet<>();
+            Set<BlockPos> potentialPois = new HashSet<>();
+            String profession;
+            int xp;
+            String inventory;
+            boolean wantsGolem;
 
-        if (entity instanceof VillagerEntity villager)
-        {
-            profession = villager.getVillagerData().getProfession().toString();
-            xp = villager.getExperience();
-            inventory = villager.getInventory().toString();
-            wantsGolem = villager.canSummonGolem(serverWorld.getTime());
-            villager.getGossip().getEntityReputationAssociatedGossips().forEach((uuid, associatedGossip) ->
-                                                                                {
-                                                                                    Entity gossipEntity = serverWorld.getEntity(uuid);
+            if (entity instanceof VillagerEntity villager)
+            {
+                profession = villager.getVillagerData().getProfession().toString();
+                xp = villager.getExperience();
+                inventory = villager.getInventory().toString();
+                wantsGolem = villager.canSummonGolem(serverWorld.getTime());
+                villager.getGossip().getEntityReputationAssociatedGossips().forEach((uuid, associatedGossip) ->
+                {
+                    Entity gossipEntity = serverWorld.getEntity(uuid);
 
-                                                                                    if (gossipEntity != null)
-                                                                                    {
-                                                                                        String name = NameGenerator.name(gossipEntity);
+                    if (gossipEntity != null)
+                    {
+                        String name = NameGenerator.name(gossipEntity);
 
-                                                                                        for (Object2IntMap.Entry<VillageGossipType> typeEntry : associatedGossip.object2IntEntrySet())
-                                                                                        {
-                                                                                            Map.Entry<VillageGossipType, Integer> entry = (Map.Entry) typeEntry;
-                                                                                            gossips.add(name + ": " + entry.getKey().asString() + " " + entry.getValue());
-                                                                                        }
-                                                                                    }
-                                                                                });
+                        for (Object2IntMap.Entry<VillageGossipType> typeEntry : associatedGossip.object2IntEntrySet())
+                        {
+                            Map.Entry<VillageGossipType, Integer> entry = (Map.Entry) typeEntry;
+                            gossips.add(name + ": " + entry.getKey().asString() + " " + entry.getValue());
+                        }
+                    }
+                });
 
-            Brain<?> brain = villager.getBrain();
-            addPoi(brain, MemoryModuleType.HOME, pois);
-            addPoi(brain, MemoryModuleType.JOB_SITE, pois);
-            addPoi(brain, MemoryModuleType.MEETING_POINT, pois);
-            addPoi(brain, MemoryModuleType.HIDING_PLACE, pois);
-            addPoi(brain, MemoryModuleType.POTENTIAL_JOB_SITE, potentialPois);
-        }
-        else
-        {
-            profession = "";
-            xp = 0;
-            inventory = "";
-            wantsGolem = false;
-        }
+                Brain<?> brain = villager.getBrain();
+                addPoi(brain, MemoryModuleType.HOME, pois);
+                addPoi(brain, MemoryModuleType.JOB_SITE, pois);
+                addPoi(brain, MemoryModuleType.MEETING_POINT, pois);
+                addPoi(brain, MemoryModuleType.HIDING_PLACE, pois);
+                addPoi(brain, MemoryModuleType.POTENTIAL_JOB_SITE, potentialPois);
+            }
+            else
+            {
+                profession = "";
+                xp = 0;
+                inventory = "";
+                wantsGolem = false;
+            }
 
-        this.sendDebugData(serverWorld, new DebugBrainCustomPayload(new DebugBrainCustomPayload.Brain(
-                entity.getUuid(), entity.getId(), entity.getName().getString(),
-                profession, xp, entity.getHealth(), entity.getMaxHealth(),
-                entity.getPos(), inventory, entity.getNavigation().getCurrentPath(),
-                wantsGolem, angerLevel,
-                entity.getBrain().getPossibleActivities().stream().map(Activity::toString).toList(),
-                entity.getBrain().getRunningTasks().stream().map(Task::getName).toList(),
-                this.listMemories(entity, serverWorld.getTime()),
-                //memories,
-                gossips, pois, potentialPois)));
+            this.sendDebugData(serverWorld, new DebugBrainCustomPayload(new DebugBrainCustomPayload.Brain(
+                    entity.getUuid(), entity.getId(), entity.getName().getString(),
+                    profession, xp, entity.getHealth(), entity.getMaxHealth(),
+                    entity.getPos(), inventory, entity.getNavigation().getCurrentPath(),
+                    wantsGolem, angerLevel,
+                    entity.getBrain().getPossibleActivities().stream().map(Activity::toString).toList(),
+                    entity.getBrain().getRunningTasks().stream().map(Task::getName).toList(),
+                    this.listMemories(entity, serverWorld.getTime()),
+                    //memories,
+                    gossips, pois, potentialPois)));
         //}
     }
 
@@ -490,11 +494,11 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("bees"))
         //{
-        this.sendDebugData(world, new DebugBeeCustomPayload(
-                new DebugBeeCustomPayload.Bee(bee.getUuid(), bee.getId(), bee.getPos(),
-                                              bee.getNavigation().getCurrentPath(), bee.getHivePos(), bee.getFlowerPos(), bee.getMoveGoalTicks(),
-                                              bee.getGoalSelector().getGoals().stream().map((prioritizedGoal) ->
-                                                                                                    prioritizedGoal.getGoal().toString()).collect(Collectors.toSet()), bee.getPossibleHives())));
+            this.sendDebugData(world, new DebugBeeCustomPayload(
+                    new DebugBeeCustomPayload.Bee(bee.getUuid(), bee.getId(), bee.getPos(),
+                            bee.getNavigation().getCurrentPath(), bee.getHivePos(), bee.getFlowerPos(), bee.getMoveGoalTicks(),
+                            bee.getGoalSelector().getGoals().stream().map((prioritizedGoal) ->
+                                    prioritizedGoal.getGoal().toString()).collect(Collectors.toSet()), bee.getPossibleHives())));
 
         //}
     }
@@ -507,9 +511,9 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("breeze"))
         //{
-        this.sendDebugData(world, new DebugBreezeCustomPayload(new DebugBreezeCustomPayload.BreezeInfo(
-                breeze.getUuid(), breeze.getId(), breeze.getTarget() == null ? null : breeze.getTarget().getId(),
-                breeze.getBrain().getOptionalRegisteredMemory(MemoryModuleType.BREEZE_JUMP_TARGET).orElse(null))));
+            this.sendDebugData(world, new DebugBreezeCustomPayload(new DebugBreezeCustomPayload.BreezeInfo(
+                    breeze.getUuid(), breeze.getId(), breeze.getTarget() == null ? null : breeze.getTarget().getId(),
+                    breeze.getBrain().getOptionalRegisteredMemory(MemoryModuleType.BREEZE_JUMP_TARGET).orElse(null))));
         //}
     }
 
@@ -521,7 +525,7 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("game_event"))
         //{
-        event.getKey().ifPresent((key) -> this.sendDebugData(world, new DebugGameEventCustomPayload(key, pos)));
+            event.getKey().ifPresent((key) -> this.sendDebugData(world, new DebugGameEventCustomPayload(key, pos)));
         //}
     }
 
@@ -533,7 +537,7 @@ public class DebugDataProvider extends DataProviderBase
         }
         //if (this.enabledDebugPackets.getValue().contains("game_event"))
         //{
-        this.sendDebugData(world, new DebugGameEventListenersCustomPayload(eventListener.getPositionSource(), eventListener.getRange()));
+            this.sendDebugData(world, new DebugGameEventListenersCustomPayload(eventListener.getPositionSource(), eventListener.getRange()));
         //}
     }
 

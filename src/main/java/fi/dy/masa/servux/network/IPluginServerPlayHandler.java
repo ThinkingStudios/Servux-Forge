@@ -60,8 +60,8 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
     void reset(Identifier channel);
 
     /**
-     * Register your Payload with Fabric API.
-     * See the fabric-networking-api-v1 Java Docs under PayloadTypeRegistry -> register()
+     * Register your Payload with BadPackets.
+     * See the BadPackets Java Docs under PlayPackets -> registerServerChannel() and PlayPackets -> registerClientChannel()
      * for more information on how to do this.
      * -
      * @param direction (Payload Direction)

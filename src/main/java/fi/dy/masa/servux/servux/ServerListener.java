@@ -2,6 +2,7 @@ package fi.dy.masa.servux.servux;
 
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.server.MinecraftServer;
+
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;

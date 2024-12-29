@@ -3,11 +3,7 @@ package fi.dy.masa.servux.network;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
-import lol.bai.badpackets.api.PacketReceiver;
-import lol.bai.badpackets.api.PacketSender;
-import lol.bai.badpackets.api.play.PlayPackets;
 import lol.bai.badpackets.api.play.ServerPlayContext;
-import lol.bai.badpackets.impl.registry.ChannelRegistry;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
@@ -20,12 +16,14 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
+import org.thinkingstudio.sevuxforged.network.PayloadTypes;
+import org.thinkingstudio.sevuxforged.network.ServerPlayNetwork;
 
 /**
  * Interface for ServerPlayHandler
  * @param <T> (Payload Param)
  */
-public interface IPluginServerPlayHandler<T extends CustomPayload> extends PacketReceiver<ServerPlayContext, T>
+public interface IPluginServerPlayHandler<T extends CustomPayload> extends ServerPlayNetwork.PlayPayloadHandler<T>
 {
     int FROM_SERVER = 1;
     int TO_SERVER = 2;
@@ -60,8 +58,8 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
     void reset(Identifier channel);
 
     /**
-     * Register your Payload with Fabric API.
-     * See the fabric-networking-api-v1 Java Docs under PayloadTypeRegistry -> register()
+     * Register your Payload with BadPackets.
+     * See the BadPackets Java Docs under PlayPackets -> registerServerChannel() and registerClientChannel()
      * for more information on how to do this.
      * -
      * @param direction (Payload Direction)
@@ -76,12 +74,12 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
             {
                 switch (direction)
                 {
-                    case TO_SERVER, FROM_CLIENT -> PlayPackets.registerServerChannel(id, codec);
-                    case FROM_SERVER, TO_CLIENT -> PlayPackets.registerClientChannel(id, codec);
+                    case TO_SERVER, FROM_CLIENT -> PayloadTypes.registerPlayC2S(id, codec);
+                    case FROM_SERVER, TO_CLIENT -> PayloadTypes.registerPlayS2C(id, codec);
                     default ->
                     {
-                        PlayPackets.registerServerChannel(id, codec);
-                        PlayPackets.registerClientChannel(id, codec);
+                        PayloadTypes.registerPlayC2S(id, codec);
+                        PayloadTypes.registerPlayS2C(id, codec);
                     }
                 }
             }
@@ -107,13 +105,13 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
      * @param receiver (Your Packet Receiver // if null, uses this::receivePlayPayload)
      * @return (True / False)
      */
-    default boolean registerPlayReceiver(@Nonnull CustomPayload.Id<T> id, @Nullable PacketReceiver<ServerPlayContext, T> receiver)
+    default boolean registerPlayReceiver(@Nonnull CustomPayload.Id<T> id, @Nullable ServerPlayNetwork.PlayPayloadHandler<T> receiver)
     {
         if (this.isPlayRegistered(this.getPayloadChannel()))
         {
             try
             {
-                PlayPackets.registerServerReceiver(id, Objects.requireNonNullElse(receiver, this::receivePlayPayload));
+                ServerPlayNetwork.registerGlobalReceiver(id, Objects.requireNonNullElse(receiver, this::receivePlayPayload));
                 return true;
             }
             catch (IllegalArgumentException e)
@@ -132,7 +130,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
      */
     default void unregisterPlayReceiver()
     {
-        ChannelRegistry.PLAY_S2C.getChannels().remove(this.getPayloadChannel());
+        ServerPlayNetwork.removeChannel(this.getPayloadChannel());
     }
 
     /**
@@ -188,7 +186,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
     void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buf, ServerPlayNetworkHandler networkHandler);
 
     /**
-     * Sends the Payload to the player using the BadPackets interface.
+     * Sends the Payload to the player using the Fabric-API interface.
      * -
      * @param player (Player to send the data to)
      * @param payload (The Payload to send)
@@ -198,11 +196,9 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
     {
         if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
         {
-            var s2c = PacketSender.s2c(player);
-
-            if (s2c.canSend(payload.getId()))
+            if (ServerPlayNetwork.canSend(player, payload.getId()))
             {
-                s2c.send(payload);
+                ServerPlayNetwork.send(player, payload);
                 return true;
             }
         }

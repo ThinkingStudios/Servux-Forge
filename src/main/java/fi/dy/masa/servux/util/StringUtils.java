@@ -4,13 +4,13 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.text.MutableText;
 import net.minecraft.util.Identifier;
-import org.thinkingstudio.sevuxforged.util.NeoUtils;
+import org.thinkingstudio.sevuxforged.loader.FoxifiedLoader;
 
 public class StringUtils
 {
     public static String getModVersionString(String modId)
     {
-        return NeoUtils.getModArtifactVersion(modId).toString();
+        return FoxifiedLoader.getModVersion(modId);
     }
 
     public static String removeDefaultMinecraftNamespace(Identifier settingId)

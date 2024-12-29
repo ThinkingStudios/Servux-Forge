@@ -19,3 +19,7 @@ For compiled builds (= downloads), see Releases
 - Open a command prompt/terminal to the repository directory
 - run 'gradlew build'
 - The built jar file will be in build/libs/
+
+## Credits
+- [maruohon/servux](https://github.com/maruohon/servux)
+- [sakura-ryoko/servux](https://github.com/sakura-ryoko/servux)

@@ -1,2 +1,2 @@
 ## Change
-- sync with `sakura-ryoko/servux` 0.4.0-sakura.5
+- sync with `sakura-ryoko/servux` 1.21.3-0.4.1-sakura.2

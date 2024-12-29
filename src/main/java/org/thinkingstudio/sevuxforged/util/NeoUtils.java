@@ -5,6 +5,7 @@ import net.neoforged.fml.loading.moddiscovery.ModInfo;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
+@Deprecated
 public class NeoUtils {
     public static ArtifactVersion getModArtifactVersion(String modId) {
         for(ModInfo modInfo: FMLLoader.getLoadingModList().getMods()) {

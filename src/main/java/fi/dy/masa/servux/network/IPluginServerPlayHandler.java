@@ -61,7 +61,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
 
     /**
      * Register your Payload with BadPackets.
-     * See the BadPackets Java Docs under PlayPackets -> registerServerChannel() and PlayPackets -> registerClientChannel()
+     * See the BadPackets Java Docs under PlayPackets -> registerServerChannel() and registerClientChannel()
      * for more information on how to do this.
      * -
      * @param direction (Payload Direction)
@@ -198,11 +198,9 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Packe
     {
         if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
         {
-            var s2c = PacketSender.s2c(player);
-
-            if (s2c.canSend(payload.getId()))
+            if (PacketSender.s2c(player).canSend(payload.getId()))
             {
-                s2c.send(payload);
+                PacketSender.s2c(player).send(payload);
                 return true;
             }
         }

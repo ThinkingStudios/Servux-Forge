@@ -4,16 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
-import lol.bai.badpackets.api.play.ServerPlayContext;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtSizeTracker;
+
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.random.Random;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+
+import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.TweaksDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -27,9 +26,9 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
 {
     private static final ServuxTweaksHandler<ServuxTweaksPacket.Payload> INSTANCE = new ServuxTweaksHandler<>() {
         @Override
-        public void receive(ServerPlayContext context, ServuxTweaksPacket.Payload payload)
+        public void receive(ServuxTweaksPacket.Payload payload, ServerPlayNetworking.Context context)
         {
-            ServuxTweaksHandler.INSTANCE.receivePlayPayload(context, payload);
+            ServuxTweaksHandler.INSTANCE.receivePlayPayload(payload, context);
         }
     };
     public static ServuxTweaksHandler<ServuxTweaksPacket.Payload> getInstance() { return INSTANCE; }
@@ -78,6 +77,7 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
             case PACKET_C2S_METADATA_REQUEST -> TweaksDataProvider.INSTANCE.sendMetadata(player);
             case PACKET_C2S_BLOCK_ENTITY_REQUEST -> TweaksDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
             case PACKET_C2S_ENTITY_REQUEST -> TweaksDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
+            /*
             case PACKET_C2S_NBT_RESPONSE_DATA ->
             {
                 UUID uuid = player.getUuid();
@@ -93,7 +93,11 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
                     readingSessionKey = this.readingSessionKeys.get(uuid);
                 }
 
-                //Servux.debugLog("ServuxTweaksHandler#decodeServerData(): received Litematic Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                if (Reference.DEV_DEBUG)
+                {
+                    Servux.debugLog("ServuxTweaksHandler#decodeServerData(): received Tweaks Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                }
+
                 PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
 
                 if (fullPacket != null)
@@ -105,10 +109,11 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
                     }
                     catch (Exception e)
                     {
-                        Servux.logger.error("ServuxTweaksHandler#decodeServerData(): Litematic Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
+                        Servux.logger.error("ServuxTweaksHandler#decodeServerData(): Tweaks Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
                     }
                 }
             }
+             */
             default -> Servux.logger.warn("ServuxTweaksHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
     }
@@ -131,7 +136,7 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
     }
 
     @Override
-    public void receivePlayPayload(ServerPlayContext ctx, T payload)
+    public void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx)
     {
         if (payload.getId().id().equals(CHANNEL_ID))
         {
@@ -150,6 +155,8 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
     @Override
     public <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data)
     {
+        if (!TweaksDataProvider.INSTANCE.isEnabled()) return;
+
         ServuxTweaksPacket packet = (ServuxTweaksPacket) data;
 
         // Send Response Data via Packet Splitter
@@ -171,7 +178,11 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
             }
             else if (this.failures.get(id) > MAX_FAILURES)
             {
-                //Servux.logger.info("Unregistering Entities Client {} after {} failures (Tweakeroo not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                if (Reference.DEV_DEBUG)
+                {
+                    Servux.logger.info("Unregistering Tweaks Client {} after {} failures (Tweakeroo not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                }
+
                 TweaksDataProvider.INSTANCE.onPacketFailure(player);
             }
             else

@@ -5,13 +5,14 @@ import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
 
-import lol.bai.badpackets.api.play.ServerPlayContext;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
+import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DebugDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -25,9 +26,9 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
 {
     private static final ServuxDebugHandler<ServuxDebugPacket.Payload> INSTANCE = new ServuxDebugHandler<>() {
         @Override
-        public void receive(ServerPlayContext context, ServuxDebugPacket.Payload payload)
+        public void receive(ServuxDebugPacket.Payload payload, ServerPlayNetworking.Context context)
         {
-            ServuxDebugHandler.INSTANCE.receivePlayPayload(context, payload);
+            ServuxDebugHandler.INSTANCE.receivePlayPayload(payload, context);
         }
     };
     public static ServuxDebugHandler<ServuxDebugPacket.Payload> getInstance() { return INSTANCE; }
@@ -77,13 +78,13 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
             case PACKET_C2S_METADATA_CONFIRM -> DebugDataProvider.INSTANCE.confirmMetadata(player, packet.getCompound());
             case PACKET_C2S_DEBUG_SERVICE_REGISTER ->
             {
-                Servux.debugLog("decodeServerData(): received Debug Service Register from player {}", player.getName().getLiteralString());
+                Servux.debugLog("ServuxDebugHandler#decodeServerData(): received Debug Service Register from player {}", player.getName().getLiteralString());
                 DebugDataProvider.INSTANCE.unregister(player, packet.getCompound());
                 DebugDataProvider.INSTANCE.register(player, packet.getCompound());
             }
             case PACKET_C2S_DEBUG_SERVICE_UNREGISTER ->
             {
-                Servux.debugLog("decodeServerData(): received Debug Service Un-Register from player {}", player.getName().getLiteralString());
+                Servux.debugLog("ServuxDebugHandler#decodeServerData(): received Debug Service Un-Register from player {}", player.getName().getLiteralString());
                 DebugDataProvider.INSTANCE.unregister(player, packet.getCompound());
             }
             default -> Servux.logger.warn("ServuxDebugHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
@@ -108,7 +109,7 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
     }
 
     @Override
-    public void receivePlayPayload(ServerPlayContext ctx, T payload)
+    public void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx)
     {
         if (payload.getId().id().equals(CHANNEL_ID))
         {
@@ -127,6 +128,8 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
     @Override
     public <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data)
     {
+        if (!DebugDataProvider.INSTANCE.isEnabled()) return;
+
         ServuxDebugPacket packet = (ServuxDebugPacket) data;
 
         // Send Response Data via Packet Splitter
@@ -147,7 +150,10 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
             }
             else if (this.failures.get(id) > MAX_FAILURES)
             {
-                //Servux.logger.info("Unregistering Entities Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                if (Reference.DEV_DEBUG)
+                {
+                    Servux.logger.info("Unregistering Debug Service Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                }
                 DebugDataProvider.INSTANCE.onPacketFailure(player);
             }
             else

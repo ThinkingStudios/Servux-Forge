@@ -11,20 +11,13 @@ group = libs.versions.maven.group.get()
 repositories {
 	maven { url "https://maven.neoforged.net/releases/" }
 	maven { url "https://api.modrinth.com/maven" }
-
+	maven { url "https://dl.cloudsmith.io/public/thinkingstudio/forgifiedfabricapi/maven/" }
 	maven {
 		url = "https://maven.pkg.github.com/thinkingstudios/NeoPermissions"
 		credentials {
 			username = "TexBlock"
 			// Read only token
 			password = "ghp_" + "VOVRX4CXfrYPiltIE7dGr94iPMeZma0gp7uX"
-		}
-	}
-
-	maven {
-		url "https://maven2.bai.lol"
-		content {
-			includeGroup "lol.bai"
 		}
 	}
 }
@@ -36,8 +29,20 @@ dependencies {
 		mappings libs.yarn.patch
 	}
 	neoForge libs.neoforge
-	modImplementation libs.badpackets
-	modImplementation(include("org.thinkingstudio:neopermissions:0.1.0+1.20.6"))
+	modImplementation libs.neopermissions
+	// ForgifiedFabricAPI
+	for (String module in ffapi_modules.split(",")) {
+		// Fabric API Base
+		if (module == "fabric-api-base") {
+			modApi(include("org.sinytra.forgified-fabric-api:$module:0.4.42+d1308ded19")) { transitive = false }
+		}
+		// Fabric Networking API V1
+		if (module == "fabric-networking-api-v1") {
+			modApi(include("org.sinytra.forgified-fabric-api:$module:4.3.0+cfe47bf219")) { transitive = false }
+		}
+	}
+
+	include libs.neopermissions
 
 	implementation libs.jsr305
 }

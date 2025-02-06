@@ -3,17 +3,16 @@ package fi.dy.masa.servux.network.packet;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import io.netty.buffer.Unpooled;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.math.BlockPos;
+
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IServerPayloadData;
-import net.minecraft.util.math.ChunkPos;
-
-import java.util.List;
 
 public class ServuxEntitiesPacket implements IServerPayloadData
 {
@@ -23,7 +22,6 @@ public class ServuxEntitiesPacket implements IServerPayloadData
     private BlockPos pos;
     private NbtCompound nbt;
     private PacketByteBuf buffer;
-    private List<ChunkPos> requestingChunks;
     public static final int PROTOCOL_VERSION = 1;
 
     private ServuxEntitiesPacket(Type type)
@@ -119,7 +117,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
     public static ServuxEntitiesPacket ResponseC2SData(@Nonnull PacketByteBuf buffer)
     {
         var packet = new ServuxEntitiesPacket(Type.PACKET_C2S_NBT_RESPONSE_DATA);
-        packet.buffer = buffer;
+        packet.buffer = new PacketByteBuf(buffer.copy());
         packet.nbt = new NbtCompound();
         return packet;
     }
@@ -263,7 +261,8 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 // Write Packet Buffer (Slice)
                 try
                 {
-                    output.writeBytes(this.buffer.readBytes(this.buffer.readableBytes()));
+                    PacketByteBuf serverReplay = new PacketByteBuf(this.buffer.copy());
+                    output.writeBytes(serverReplay.readBytes(serverReplay.readableBytes()));
                 }
                 catch (Exception e)
                 {

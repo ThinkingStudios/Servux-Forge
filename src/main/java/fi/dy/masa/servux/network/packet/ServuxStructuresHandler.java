@@ -4,12 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
-import lol.bai.badpackets.api.play.ServerPlayContext;
+
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+
+import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -22,8 +25,9 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 {
     private static final ServuxStructuresHandler<ServuxStructuresPacket.Payload> INSTANCE = new ServuxStructuresHandler<>() {
         @Override
-        public void receive(ServerPlayContext context, ServuxStructuresPacket.Payload payload) {
-            ServuxStructuresHandler.INSTANCE.receivePlayPayload(context, payload);
+        public void receive(ServuxStructuresPacket.Payload payload, ServerPlayNetworking.Context context)
+        {
+            ServuxStructuresHandler.INSTANCE.receivePlayPayload(payload, context);
         }
     };
     public static ServuxStructuresHandler<ServuxStructuresPacket.Payload> getInstance() { return INSTANCE; }
@@ -73,17 +77,19 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
                 StructureDataProvider.INSTANCE.unregister(player);
                 StructureDataProvider.INSTANCE.register(player);
             }
+            /*
             case PACKET_C2S_REQUEST_SPAWN_METADATA ->
             {
                 StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
                 //HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
             }
+             */
             case PACKET_C2S_STRUCTURES_UNREGISTER ->
             {
                 Servux.debugLog("decodeStructuresPacket(): received Structures Un-Register from player {}", player.getName().getLiteralString());
                 StructureDataProvider.INSTANCE.unregister(player);
-                StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
-                StructureDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
+                //StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
+                //StructureDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
                 //HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
                 //HudDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
             }
@@ -109,7 +115,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     }
 
     @Override
-    public void receivePlayPayload(ServerPlayContext ctx, T payload)
+    public void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx)
     {
         if (payload.getId().id().equals(CHANNEL_ID))
         {
@@ -127,6 +133,8 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
     public void encodeStructuresPacket(ServerPlayerEntity player, ServuxStructuresPacket packet)
     {
+        if (!StructureDataProvider.INSTANCE.isEnabled()) return;
+
         if (packet.getType().equals(ServuxStructuresPacket.Type.PACKET_S2C_STRUCTURE_DATA_START))
         {
             // Send Structure Data via Packet Splitter
@@ -145,7 +153,11 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             }
             else if (this.failures.get(id) > MAX_FAILURES)
             {
-                //Servux.logger.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                if (Reference.DEV_DEBUG)
+                {
+                    Servux.logger.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                }
+
                 StructureDataProvider.INSTANCE.unregister(player);
             }
             else

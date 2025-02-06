@@ -1,6 +1,7 @@
 package fi.dy.masa.servux.dataproviders;
 
 import java.util.List;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -16,7 +17,6 @@ import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.settings.ServuxStringSetting;
 import fi.dy.masa.servux.util.StringUtils;
 import fi.dy.masa.servux.util.i18nLang;
-import org.thinkingstudio.neopermissions.api.v0.Permissions;
 
 public class ServuxConfigProvider extends DataProviderBase
 {
@@ -81,6 +81,12 @@ public class ServuxConfigProvider extends DataProviderBase
         // NO-OP
     }
 
+    @Override
+    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    {
+        return true;
+    }
+
     public void doReloadConfig(ServerCommandSource source)
     {
         DataProviderManager.INSTANCE.readFromConfig();
@@ -95,7 +101,7 @@ public class ServuxConfigProvider extends DataProviderBase
 
     public boolean hasDebugMode()
     {
-        return this.debugLog.getValue();
+        return this.debugLog.getValue() || Reference.DEV_DEBUG;
     }
 
     @Override

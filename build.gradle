@@ -11,6 +11,8 @@ group = libs.versions.maven.group.get()
 repositories {
 	maven { url "https://maven.neoforged.net/releases/" }
 	maven { url "https://api.modrinth.com/maven" }
+	maven { url "https://maven.su5ed.dev/releases" }
+	maven { url "https://dl.cloudsmith.io/public/thinkingstudio/foxifiednetworking/maven/" }
 
 	maven {
 		url = "https://maven.pkg.github.com/thinkingstudios/NeoPermissions"
@@ -18,13 +20,6 @@ repositories {
 			username = "TexBlock"
 			// Read only token
 			password = "ghp_" + "VOVRX4CXfrYPiltIE7dGr94iPMeZma0gp7uX"
-		}
-	}
-
-	maven {
-		url "https://maven2.bai.lol"
-		content {
-			includeGroup "lol.bai"
 		}
 	}
 }
@@ -36,8 +31,11 @@ dependencies {
 		mappings libs.yarn.patch
 	}
 	neoForge libs.neoforge
-	modImplementation libs.badpackets
-	modImplementation(include("org.thinkingstudio:neopermissions:0.1.0+1.20.6"))
+	modImplementation libs.foxifiednetworking
+	modImplementation libs.neopermissions
+
+	include libs.foxifiednetworking
+	include libs.neopermissions
 
 	implementation libs.jsr305
 }
@@ -91,11 +89,9 @@ publisher {
 	setChangelog(file("CHANGELOG.md").getText("UTF-8"))
 	setVersion("${project.version}")
 	setDisplayName("${project.version}")
-	setGameVersions("1.21.2", "1.21.3")
+	setGameVersions("1.21.3")
 	setLoaders(loom.platform.get().id())
 	setCurseEnvironment("server")
 	setArtifact(remapJar)
 	addAdditionalFile(sourcesJar)
-	modrinthDepends.required("badpackets")
-	curseDepends.required("badpackets")
 }

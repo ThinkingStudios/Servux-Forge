@@ -1,9 +1,11 @@
 package fi.dy.masa.servux.dataproviders;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import javax.annotation.Nullable;
-import org.thinkingstudio.neopermissions.api.v0.Permissions;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import com.mojang.serialization.DataResult;
 import net.minecraft.nbt.NbtCompound;
@@ -54,6 +56,7 @@ public class HudDataProvider extends DataProviderBase
     private long lastWeatherTick;
     private boolean refreshSpawnMetadata;
     private boolean refreshWeatherData;
+    private final List<UUID> invalidPlayers = new ArrayList<>();
 
     protected HudDataProvider()
     {
@@ -107,6 +110,12 @@ public class HudDataProvider extends DataProviderBase
     }
 
     @Override
+    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    {
+        return !this.isPlayerInvalid(player);
+    }
+
+    @Override
     public boolean shouldTick()
     {
         return this.enabled;
@@ -115,6 +124,8 @@ public class HudDataProvider extends DataProviderBase
     @Override
     public void tick(MinecraftServer server, int tickCounter, Profiler profiler)
     {
+        if (!this.isEnabled()) return;
+
         if ((tickCounter % this.updateInterval.getValue()) == 0)
         {
             profiler.push(this.getName());
@@ -139,6 +150,8 @@ public class HudDataProvider extends DataProviderBase
             profiler.swap(this.getName() + "_players");
             for (ServerPlayerEntity player : playerList)
             {
+                if (this.isPlayerInvalid(player)) continue;
+
                 if (this.shouldRefreshWeatherData())
                 {
                     this.refreshWeatherData(player, null);
@@ -163,8 +176,28 @@ public class HudDataProvider extends DataProviderBase
         }
     }
 
+    private void setPlayerInvalid(ServerPlayerEntity player)
+    {
+        if (!this.invalidPlayers.contains(player.getUuid()))
+        {
+            this.invalidPlayers.add(player.getUuid());
+        }
+    }
+
+    private boolean isPlayerInvalid(ServerPlayerEntity player)
+    {
+        return this.invalidPlayers.contains(player.getUuid());
+    }
+
+    private void removeInvalidPlayer(ServerPlayerEntity player)
+    {
+        this.invalidPlayers.remove(player.getUuid());
+    }
+
     public void tickWeather(int clearTime, int rainTime, int thunderTime, boolean isRaining, boolean isThunder)
     {
+        if (!this.isEnabled()) return;
+
         this.clearWeatherTime = clearTime;
         this.rainWeatherTime = rainTime;
         this.thunderWeatherTime = thunderTime;
@@ -180,12 +213,16 @@ public class HudDataProvider extends DataProviderBase
 
     public void sendMetadata(ServerPlayerEntity player)
     {
+        if (!this.isEnabled()) return;
+
         if (this.hasPermission(player) == false)
         {
             // No Permission
             Servux.debugLog("hud_service: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
             return;
         }
+
+        this.removeInvalidPlayer(player);
 
         NbtCompound nbt = new NbtCompound();
         nbt.copyFrom(this.metadata);
@@ -210,11 +247,18 @@ public class HudDataProvider extends DataProviderBase
 
     public void onPacketFailure(ServerPlayerEntity player)
     {
-        // Do something when packets fail, if required
+        this.setPlayerInvalid(player);;
+    }
+
+    public void removePlayer(ServerPlayerEntity player)
+    {
+        this.removeInvalidPlayer(player);
     }
 
     public void refreshSpawnMetadata(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
+        if (!this.isEnabled()) return;
+
         NbtCompound nbt = new NbtCompound();
         BlockPos spawnPos = HudDataProvider.INSTANCE.getSpawnPos();
 
@@ -242,7 +286,7 @@ public class HudDataProvider extends DataProviderBase
     {
         NbtCompound nbt = new NbtCompound();
 
-        if (this.hasPermissionsForWeather(player) == false)
+        if (this.hasPermissionsForWeather(player) == false || !this.isEnabled())
         {
             return;
         }

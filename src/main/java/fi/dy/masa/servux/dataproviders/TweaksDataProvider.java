@@ -1,6 +1,9 @@
 package fi.dy.masa.servux.dataproviders;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
@@ -19,7 +22,6 @@ import fi.dy.masa.servux.network.packet.ServuxTweaksHandler;
 import fi.dy.masa.servux.network.packet.ServuxTweaksPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
-import org.thinkingstudio.neopermissions.api.v0.Permissions;
 
 public class TweaksDataProvider extends DataProviderBase
 {
@@ -28,6 +30,8 @@ public class TweaksDataProvider extends DataProviderBase
     protected final NbtCompound metadata = new NbtCompound();
     protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
     protected List<IServuxSetting<?>> settings = List.of(this.permissionLevel);
+
+    private final List<UUID> invalidPlayers = new ArrayList<>();
 
     protected TweaksDataProvider()
     {
@@ -74,8 +78,16 @@ public class TweaksDataProvider extends DataProviderBase
         return HANDLER;
     }
 
+    @Override
+    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    {
+        return !this.isPlayerInvalid(player);
+    }
+
     public void sendMetadata(ServerPlayerEntity player)
     {
+        if (!this.isEnabled()) return;
+
         if (this.hasPermission(player) == false)
         {
             // No Permission
@@ -98,12 +110,35 @@ public class TweaksDataProvider extends DataProviderBase
 
     public void onPacketFailure(ServerPlayerEntity player)
     {
-        // Do something when packets fail, if required
+        this.setPlayerInvalid(player);
+    }
+
+    public void removePlayer(ServerPlayerEntity player)
+    {
+        this.removeInvalidPlayer(player);
+    }
+
+    private void setPlayerInvalid(ServerPlayerEntity player)
+    {
+        if (!this.invalidPlayers.contains(player.getUuid()))
+        {
+            this.invalidPlayers.add(player.getUuid());
+        }
+    }
+
+    private boolean isPlayerInvalid(ServerPlayerEntity player)
+    {
+        return this.invalidPlayers.contains(player.getUuid());
+    }
+
+    private void removeInvalidPlayer(ServerPlayerEntity player)
+    {
+        this.invalidPlayers.remove(player.getUuid());
     }
 
     public void onBlockEntityRequest(ServerPlayerEntity player, BlockPos pos)
     {
-        if (this.hasPermission(player) == false)
+        if (this.hasPermission(player) == false || !this.isEnabled())
         {
             return;
         }
@@ -147,6 +182,7 @@ public class TweaksDataProvider extends DataProviderBase
         }
     }
 
+    /*
     public void handleBulkClientRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
     {
         if (this.hasPermission(player) == false)
@@ -155,7 +191,6 @@ public class TweaksDataProvider extends DataProviderBase
         }
 
         Servux.logger.warn("handleBulkClientRequest(): from player {} -- Not Implemented!", player.getName().getLiteralString());
-        // todo
     }
 
     public void handleClientBulkData(ServerPlayerEntity player, int transactionId, NbtCompound nbtCompound)
@@ -166,8 +201,8 @@ public class TweaksDataProvider extends DataProviderBase
         }
 
         Servux.logger.warn("handleClientBulkData(): from player {} -- Not Implemented!", player.getName().getLiteralString());
-        // todo
     }
+     */
 
     @Override
     public boolean hasPermission(ServerPlayerEntity player)

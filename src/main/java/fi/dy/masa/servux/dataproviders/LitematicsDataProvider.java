@@ -1,8 +1,10 @@
 package fi.dy.masa.servux.dataproviders;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import org.thinkingstudio.neopermissions.api.v0.Permissions;
+import java.util.UUID;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
@@ -30,6 +32,8 @@ import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.util.*;
+import fi.dy.masa.servux.util.nbt.NbtUtils;
+import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class LitematicsDataProvider extends DataProviderBase
 {
@@ -43,7 +47,10 @@ public class LitematicsDataProvider extends DataProviderBase
             "permission_level_paste",
             0, 4, 0);
     public ServuxBoolSetting fixRaiLRotations = new ServuxBoolSetting(this, "fix_rail_rotations", true);
-    private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel, this.fixRaiLRotations);
+    public ServuxBoolSetting fixStairMirror = new ServuxBoolSetting(this, "fix_stairs_mirror", true);
+    private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel, this.fixRaiLRotations, this.fixStairMirror);
+
+    private final List<UUID> invalidPlayers = new ArrayList<>();
 
     protected LitematicsDataProvider()
     {
@@ -91,8 +98,16 @@ public class LitematicsDataProvider extends DataProviderBase
         return HANDLER;
     }
 
+    @Override
+    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    {
+        return !this.isPlayerInvalid(player);
+    }
+
     public void sendMetadata(ServerPlayerEntity player)
     {
+        if (!this.isEnabled()) return;
+
         if (!this.hasPermission(player))
         {
             // No Permission
@@ -115,12 +130,35 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onPacketFailure(ServerPlayerEntity player)
     {
-        // Do something when packets fail, if required
+        this.setPlayerInvalid(player);
+    }
+
+    public void removePlayer(ServerPlayerEntity player)
+    {
+        this.removeInvalidPlayer(player);
+    }
+
+    private void setPlayerInvalid(ServerPlayerEntity player)
+    {
+        if (!this.invalidPlayers.contains(player.getUuid()))
+        {
+            this.invalidPlayers.add(player.getUuid());
+        }
+    }
+
+    private boolean isPlayerInvalid(ServerPlayerEntity player)
+    {
+        return this.invalidPlayers.contains(player.getUuid());
+    }
+
+    private void removeInvalidPlayer(ServerPlayerEntity player)
+    {
+        this.invalidPlayers.remove(player.getUuid());
     }
 
     public void onBlockEntityRequest(ServerPlayerEntity player, BlockPos pos)
     {
-        if (this.hasPermission(player) == false)
+        if (this.hasPermission(player) == false || !this.isEnabled())
         {
             return;
         }
@@ -134,7 +172,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onEntityRequest(ServerPlayerEntity player, int entityId)
     {
-        if (this.hasPermission(player) == false)
+        if (this.hasPermission(player) == false || !this.isEnabled())
         {
             return;
         }
@@ -166,7 +204,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onBulkEntityRequest(ServerPlayerEntity player, ChunkPos chunkPos, NbtCompound req)
     {
-        if (this.hasPermission(player) == false)
+        if (this.hasPermission(player) == false || !this.isEnabled())
         {
             //Servux.logger.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getLiteralString());
             return;
@@ -189,6 +227,8 @@ public class LitematicsDataProvider extends DataProviderBase
         if ((req.contains("Task") && req.getString("Task").equals("BulkEntityRequest")) ||
             req.contains("Task") == false)
         {
+            Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos [{}] to player {}", chunkPos.toString(), player.getName().getLiteralString());
+
             long timeStart = System.currentTimeMillis();
             NbtList tileList = new NbtList();
             NbtList entityList = new NbtList();
@@ -221,7 +261,7 @@ public class LitematicsDataProvider extends DataProviderBase
                 if (entity.saveNbt(entTag))
                 {
                     Vec3d posVec = new Vec3d(entity.getX() - pos1.getX(), entity.getY() - pos1.getY(), entity.getZ() - pos1.getZ());
-                    NBTUtils.writeEntityPositionToTag(posVec, entTag);
+                    NbtUtils.writeEntityPositionToTag(posVec, entTag);
                     entTag.putInt("entityId", entity.getId());
                     entityList.add(entTag);
                 }
@@ -233,7 +273,7 @@ public class LitematicsDataProvider extends DataProviderBase
             output.put("Entities", entityList);
             output.putInt("chunkX", chunkPos.x);
             output.putInt("chunkZ", chunkPos.z);
-            //long timeElapsed = System.currentTimeMillis() - timeStart;
+            long timeElapsed = System.currentTimeMillis() - timeStart;
 
             HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
             //player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
@@ -242,6 +282,8 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void handleClientPasteRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
     {
+        if (!this.isEnabled()) return;
+
         if (this.hasPermission(player) == false || this.hasPermissionsForPaste(player) == false)
         {
             Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().getLiteralString());
@@ -255,9 +297,10 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        //Servux.logger.warn("LitematicsDataProvider#handleClientPasteRequest(): from player {}", player.getName().getLiteralString());
         if (tags.getString("Task").equals("LitematicaPaste"))
         {
+            Servux.debugLog("litematic_data: Servux Paste request from player {}", player.getName().getLiteralString());
+
             long timeStart = System.currentTimeMillis();
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode"));

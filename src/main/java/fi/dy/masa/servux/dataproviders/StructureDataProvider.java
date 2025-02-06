@@ -10,6 +10,7 @@ import fi.dy.masa.servux.settings.ServuxStringListSetting;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
@@ -37,7 +38,6 @@ import fi.dy.masa.servux.network.packet.ServuxStructuresHandler;
 import fi.dy.masa.servux.network.packet.ServuxStructuresPacket;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
-import org.thinkingstudio.neopermissions.api.v0.Permissions;
 
 public class StructureDataProvider extends DataProviderBase
 {
@@ -104,6 +104,12 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     @Override
+    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    {
+        return this.registeredPlayers.containsKey(player.getUuid());
+    }
+
+    @Override
     public boolean shouldTick()
     {
         return this.enabled;
@@ -112,6 +118,8 @@ public class StructureDataProvider extends DataProviderBase
     @Override
     public void tick(MinecraftServer server, int tickCounter, Profiler profiler)
     {
+        if (!this.isEnabled()) return;
+
         if ((tickCounter % this.updateInterval.getValue()) == 0)
         {
             profiler.push(this.getName());
@@ -123,6 +131,7 @@ public class StructureDataProvider extends DataProviderBase
             //this.lastTick = tickCounter;
 
             profiler.swap(this.getName() + "_players");
+
             for (ServerPlayerEntity player : playerList)
             {
                 UUID uuid = player.getUuid();
@@ -177,6 +186,8 @@ public class StructureDataProvider extends DataProviderBase
 
     public boolean register(ServerPlayerEntity player)
     {
+        if (!this.isEnabled()) return false;
+
         // System.out.printf("register\n");
         boolean registered = false;
         MinecraftServer server = player.getServer();
@@ -201,7 +212,6 @@ public class StructureDataProvider extends DataProviderBase
                 nbt.copyFrom(this.metadata);
 
                 Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().getLiteralString());
-
                 HANDLER.sendPlayPayload(handler, new ServuxStructuresPacket.Payload(new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_METADATA, nbt)));
                 this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance()+2, tickCounter);
             }

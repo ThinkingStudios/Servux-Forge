@@ -2,7 +2,7 @@ package fi.dy.masa.servux.commands;
 
 import java.util.*;
 
-import org.thinkingstudio.neopermissions.api.v0.Permissions;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;

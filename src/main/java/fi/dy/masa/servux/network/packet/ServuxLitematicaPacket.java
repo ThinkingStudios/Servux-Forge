@@ -114,7 +114,7 @@ public class ServuxLitematicaPacket implements IServerPayloadData
     public static ServuxLitematicaPacket ResponseS2CData(@Nonnull PacketByteBuf buffer)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_NBT_RESPONSE_DATA);
-        packet.buffer = buffer;
+        packet.buffer = new PacketByteBuf(buffer.copy());
         packet.nbt = new NbtCompound();
         return packet;
     }
@@ -129,7 +129,7 @@ public class ServuxLitematicaPacket implements IServerPayloadData
     public static ServuxLitematicaPacket ResponseC2SData(@Nonnull PacketByteBuf buffer)
     {
         var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_NBT_RESPONSE_DATA);
-        packet.buffer = buffer;
+        packet.buffer = new PacketByteBuf(buffer.copy());
         packet.nbt = new NbtCompound();
         return packet;
     }
@@ -287,7 +287,8 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 // Write Packet Buffer (Slice)
                 try
                 {
-                    output.writeBytes(this.buffer.readBytes(this.buffer.readableBytes()));
+                    PacketByteBuf serverReplay = new PacketByteBuf(this.buffer.copy());
+                    output.writeBytes(serverReplay.readBytes(serverReplay.readableBytes()));
                 }
                 catch (Exception e)
                 {

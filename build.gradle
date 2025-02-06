@@ -101,6 +101,4 @@ publisher {
 	setCurseEnvironment("server")
 	setArtifact(remapJar)
 	addAdditionalFile(sourcesJar)
-	modrinthDepends.required("badpackets")
-	curseDepends.required("badpackets")
 }

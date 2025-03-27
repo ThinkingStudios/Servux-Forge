@@ -15,9 +15,10 @@ Servux unofficial (Neo)Forge port.
 
 Server-side support and integration for masa's client mods.
 '''
+displayTest = "IGNORE_SERVER_VERSION"
 
 [[mixins]]
-config = "servux.mixins.json"
+config = "mixins.servux.json"
 
 [[dependencies.servux]]
 modId = "neoforge"

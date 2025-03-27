@@ -1,6 +1,7 @@
 package fi.dy.masa.servux;
 
-import java.io.File;
+import java.nio.file.Path;
+
 import net.minecraft.MinecraftVersion;
 import fi.dy.masa.servux.util.StringUtils;
 import org.thinkingstudio.sevuxforged.loader.FoxifiedLoader;
@@ -15,6 +16,6 @@ public class Reference
     public static final String MOD_STRING = MOD_ID + "-" + MOD_TYPE + "-" + MC_VERSION + "-" + MOD_VERSION;
     public static final boolean DEV_DEBUG = false;
 
-    public static final File DEFAULT_RUN_DIR = FoxifiedLoader.getGameDir().toFile();
-    public static final File DEFAULT_CONFIG_DIR = FoxifiedLoader.getConfigDir().toFile();
+    public static final Path DEFAULT_RUN_DIR = FoxifiedLoader.getGameDir();
+    public static final Path DEFAULT_CONFIG_DIR = FoxifiedLoader.getConfigDir();
 }

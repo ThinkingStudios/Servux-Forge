@@ -10,7 +10,7 @@ import fi.dy.masa.servux.servux.ServuxInitHandler;
 
 public class Servux
 {
-    public static final Logger logger = LogManager.getLogger(Reference.MOD_ID);
+    public static final Logger LOGGER = LogManager.getLogger(Reference.MOD_ID);
 
     public static void onInitialize()
     {
@@ -23,7 +23,7 @@ public class Servux
     {
         if (ServuxConfigProvider.INSTANCE.hasDebugMode())
         {
-            logger.info(msg, args);
+            LOGGER.info(msg, args);
         }
     }
 }

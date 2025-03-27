@@ -106,13 +106,15 @@ public class PlacementHandler
         {
             for (Property<?> p : propList)
             {
+
+                /*
                 if ((property.isPresent() && !property.get().equals(p)) ||
                     (property.isEmpty()) &&
                     WHITELISTED_PROPERTIES.contains(p))
                     //WHITELISTED_PROPERTIES.contains(p) &&
                     //!BLACKLISTED_PROPERTIES.contains(p))
+                 */
 
-                /*
                 if (property.isPresent() && property.get().equals(p))
                 {
                     //System.out.printf("[PHv3] skipping prot val: 0x%08X [Property %s]\n", protocolValue, p.getName());
@@ -120,7 +122,6 @@ public class PlacementHandler
                 }
                 else if (WHITELISTED_PROPERTIES.contains(p) &&
                         !BLACKLISTED_PROPERTIES.contains(p))
-                 */
                 {
                     @SuppressWarnings("unchecked")
                     Property<T> prop = (Property<T>) p;
@@ -161,7 +162,7 @@ public class PlacementHandler
         }
         catch (Exception e)
         {
-            Servux.logger.warn("Exception trying to apply placement protocol value", e);
+            Servux.LOGGER.warn("Exception trying to apply placement protocol value", e);
         }
 
         // Strip Blacklisted properties, and use the Block's default state.

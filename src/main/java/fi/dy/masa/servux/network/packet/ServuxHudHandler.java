@@ -81,7 +81,7 @@ public abstract class ServuxHudHandler<T extends CustomPayload> implements IPlug
                 // TODO 1.21.2+
                 //HudDataProvider.INSTANCE.refreshRecipeManager(player, packet.getCompound());
             }
-            default -> Servux.logger.warn("ServuxHudHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+            default -> Servux.LOGGER.warn("ServuxHudHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
     }
 
@@ -146,7 +146,7 @@ public abstract class ServuxHudHandler<T extends CustomPayload> implements IPlug
             {
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.logger.info("Unregistering Hud Data Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                    Servux.LOGGER.info("Unregistering Hud Data Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
                 }
 
                 HudDataProvider.INSTANCE.onPacketFailure(player);

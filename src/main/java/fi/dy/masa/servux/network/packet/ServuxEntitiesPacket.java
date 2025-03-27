@@ -216,7 +216,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing Block Entity Request to packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#toPacket: error writing Block Entity Request to packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_ENTITY_REQUEST ->
@@ -229,7 +229,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing Entity Request to packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#toPacket: error writing Entity Request to packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE ->
@@ -241,7 +241,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing Block Entity Response to packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#toPacket: error writing Block Entity Response to packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE ->
@@ -253,7 +253,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing Entity Response to packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#toPacket: error writing Entity Response to packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_NBT_RESPONSE_DATA, PACKET_C2S_NBT_RESPONSE_DATA ->
@@ -261,12 +261,16 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 // Write Packet Buffer (Slice)
                 try
                 {
+                    /*
                     PacketByteBuf serverReplay = new PacketByteBuf(this.buffer.copy());
                     output.writeBytes(serverReplay.readBytes(serverReplay.readableBytes()));
+                     */
+
+                    output.writeBytes(this.buffer.copy());
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA ->
@@ -278,10 +282,10 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            default -> Servux.logger.error("ServuxEntitiesPacket#toPacket: Unknown packet type!");
+            default -> Servux.LOGGER.error("ServuxEntitiesPacket#toPacket: Unknown packet type!");
         }
     }
 
@@ -294,7 +298,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
         if (type == null)
         {
             // Invalid Type
-            Servux.logger.warn("ServuxEntitiesPacket#fromPacket: invalid packet type received");
+            Servux.LOGGER.warn("ServuxEntitiesPacket#fromPacket: invalid packet type received");
             return null;
         }
         switch (type)
@@ -309,7 +313,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Block Entity Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#fromPacket: error reading Block Entity Request from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_ENTITY_REQUEST ->
@@ -322,7 +326,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Entity Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#fromPacket: error reading Entity Request from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE ->
@@ -333,7 +337,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Block Entity Response from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#fromPacket: error reading Block Entity Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE ->
@@ -344,7 +348,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Entity Response from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#fromPacket: error reading Entity Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_NBT_RESPONSE_DATA ->
@@ -356,7 +360,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading S2C Bulk Response Buffer from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#fromPacket: error reading S2C Bulk Response Buffer from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_NBT_RESPONSE_DATA ->
@@ -368,7 +372,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading C2S Bulk Response Buffer from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#fromPacket: error reading C2S Bulk Response Buffer from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_METADATA_REQUEST ->
@@ -380,7 +384,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Metadata Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#fromPacket: error reading Metadata Request from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_METADATA ->
@@ -392,10 +396,10 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Metadata Response from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxEntitiesPacket#fromPacket: error reading Metadata Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            default -> Servux.logger.error("ServuxEntitiesPacket#fromPacket: Unknown packet type!");
+            default -> Servux.LOGGER.error("ServuxEntitiesPacket#fromPacket: Unknown packet type!");
         }
 
         return null;

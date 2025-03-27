@@ -104,12 +104,16 @@ public class ServuxStructuresPacket implements IServerPayloadData
             // Write Packet Buffer
             try
             {
+                /*
                 PacketByteBuf serverReplay = new PacketByteBuf(this.buffer.copy());
                 output.writeBytes(serverReplay.readBytes(serverReplay.readableBytes()));
+                 */
+
+                output.writeBytes(this.buffer.copy());
             }
             catch (Exception e)
             {
-                Servux.logger.error("ServuxStructuresPacket#toPacket: error writing data to packet: [{}]", e.getLocalizedMessage());
+                Servux.LOGGER.error("ServuxStructuresPacket#toPacket: error writing data to packet: [{}]", e.getLocalizedMessage());
             }
         }
         else
@@ -121,7 +125,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
             }
             catch (Exception e)
             {
-                Servux.logger.error("ServuxStructuresPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
+                Servux.LOGGER.error("ServuxStructuresPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
             }
         }
     }
@@ -135,7 +139,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
         if (type == null)
         {
             // Invalid Type
-            Servux.logger.warn("ServuxStructuresPacket#fromPacket: invalid packet type received");
+            Servux.LOGGER.warn("ServuxStructuresPacket#fromPacket: invalid packet type received");
         }
         else if (type.equals(Type.PACKET_S2C_STRUCTURE_DATA))
         {
@@ -146,7 +150,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
             }
             catch (Exception e)
             {
-                Servux.logger.error("ServuxStructuresPacket#fromPacket: error reading Buffer from packet: [{}]", e.getLocalizedMessage());
+                Servux.LOGGER.error("ServuxStructuresPacket#fromPacket: error reading Buffer from packet: [{}]", e.getLocalizedMessage());
             }
         }
         else
@@ -158,7 +162,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
             }
             catch (Exception e)
             {
-                Servux.logger.error("ServuxStructuresPacket#fromPacket: error reading NBT from packet: [{}]", e.getLocalizedMessage());
+                Servux.LOGGER.error("ServuxStructuresPacket#fromPacket: error reading NBT from packet: [{}]", e.getLocalizedMessage());
             }
         }
 

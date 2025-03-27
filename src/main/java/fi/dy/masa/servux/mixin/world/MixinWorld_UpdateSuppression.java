@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.world;
 
 import fi.dy.masa.servux.util.IWorldUpdateSuppressor;
 import net.minecraft.world.World;
@@ -6,18 +6,18 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(World.class)
-public class MixinWorld implements IWorldUpdateSuppressor
+public class MixinWorld_UpdateSuppression implements IWorldUpdateSuppressor
 {
     @Unique private boolean servux_preventBlockUpdates;
 
     @Override
-    public boolean litematica_getShouldPreventBlockUpdates()
+    public boolean servux_getShouldPreventBlockUpdates()
     {
         return this.servux_preventBlockUpdates;
     }
 
     @Override
-    public void litematica_setShouldPreventBlockUpdates(boolean preventUpdates)
+    public void servux_setShouldPreventBlockUpdates(boolean preventUpdates)
     {
         this.servux_preventBlockUpdates = preventUpdates;
     }

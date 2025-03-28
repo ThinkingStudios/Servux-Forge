@@ -1,6 +1,6 @@
 # ServuxForged
 
-**This mod requires [BadPackets](https://modrinth.com/mod/badpackets) in 1.20.4 and above.**
+**This mod requires [BadPackets](https://modrinth.com/mod/badpackets) in 1.20.4 ~ 1.20.6 and 1.21.x-0.2.1 below.**
 
 Servux unofficial (Neo)Forge port.
 

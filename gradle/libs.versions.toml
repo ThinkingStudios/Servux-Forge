@@ -3,10 +3,10 @@
 minecraft_version="1.21.3"
 yarn_mappings="1.21.3+build.2"
 mappings_patch="1.21+build.4"
-neoforge="21.3.66"
+neoforge="21.3.79"
 
 # Mod properties
-version="0.2.2"
+version="0.2.3"
 maven-group="org.thinkingstudio.servuxforged"
 archives-name="ServuxForged"
 
@@ -21,7 +21,7 @@ neopermissions="0.1.0+1.21.3"
 jsr305="3.0.2"
 
 # Gradle plugin
-architectury-loom = "1.9-SNAPSHOT"
+architectury-loom = "1.10-SNAPSHOT"
 modpublisher = "2.+"
 
 [libraries]
